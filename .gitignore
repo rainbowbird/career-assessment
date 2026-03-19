@@ -54,3 +54,6 @@ temp/
 
 # Generated files during testing
 cookies.txt
+
+# Original single-page file (migrated to frontend/)
+career_assessment_v3.html
