@@ -111,6 +111,24 @@ docker-compose logs -f mysql
 
 ## 调试指南
 
+### 完整调试手册
+
+我们提供了一套完整的调试手册，涵盖前端、后端、数据库、Nginx 和 Docker 的调试方法：
+
+📚 **[调试手册总览](docs/README.md)** - 从这里开始
+
+**分章节指南：**
+
+- [01-前端调试指南](docs/01-frontend-debugging.md) - 浏览器 DevTools、API 调用、异步调试（重点）
+- [02-后端调试指南](docs/02-backend-debugging.md) - Node.js Inspector、API 测试、错误处理
+- [03-数据库调试指南](docs/03-database-debugging.md) - MySQL 查询、数据验证、连接问题
+- [04-Nginx 调试指南](docs/04-nginx-debugging.md) - 反向代理、静态文件、路由规则
+- [05-Docker 调试指南](docs/05-docker-debugging.md) - 容器管理、日志分析、网络调试
+- [06-常见问题速查](docs/06-common-issues.md) - 快速排查最常见的问题
+- [07-命令速查手册](docs/07-command-cheatsheet.md) - 所有常用命令的完整参考
+
+### 快速调试命令
+
 ### 后端调试 (Node.js)
 
 使用 Chrome DevTools 或 VS Code 调试：
