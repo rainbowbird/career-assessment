@@ -1,0 +1,3262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生职场潜能测评</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 使用支持中文的jsPDF版本 -->
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        accent: '#6366f1',
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        neutral: '#64748b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all {
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
+            }
+            .slide-in {
+                animation: slideIn 0.5s ease-out forwards;
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-line-chart text-primary text-2xl"></i>
+                <span class="text-lg font-bold">学生职场潜能测评</span>
+            </div>
+            <button id="toggle-view-btn" class="flex items-center space-x-1 text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200">
+                <i class="fa fa-user-circle-o"></i>
+                <span id="view-text">管理员登录</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 管理员登录模态框 -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">管理员登录</h2>
+            <div class="mb-4">
+                <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                <input type="password" id="admin-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="login-cancel" class="px-4 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200">
+                    取消
+                </button>
+                <button id="login-confirm" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200">
+                    登录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 欢迎页面 -->
+        <section id="welcome-section" class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="mb-8">
+                <i class="fa fa-line-chart text-primary text-6xl mb-4"></i>
+                <h1 class="text-3xl font-bold mb-2">学生职场潜能测评</h1>
+                <p class="text-neutral max-w-xl mx-auto">
+                    专业的职场潜能测评工具，帮助应届毕业生了解自身职场能力，为求职做好准备
+                </p>
+            </div>
+            <button id="start-intro-btn" class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow active:scale-95">
+                开始测评
+            </button>
+        </section>
+
+        <!-- 介绍页面 -->
+        <section id="intro-section" class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 hidden slide-in">
+            <div class="flex flex-col md:flex-row items-center justify-between mb-6">
+                <button id="back-to-welcome-btn" class="flex items-center space-x-1 text-sm px-4 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200 mb-4 md:mb-0">
+                    <i class="fa fa-arrow-left"></i>
+                    <span>返回</span>
+                </button>
+                <div class="text-right">
+                    <h2 class="text-2xl font-bold">测评介绍</h2>
+                    <p class="text-neutral">了解测评流程和目的</p>
+                </div>
+            </div>
+
+            <div class="prose max-w-none">
+                <h3 class="text-lg font-semibold mb-3">测评目的</h3>
+                <p class="text-neutral mb-6">
+                    本测评旨在帮助应届毕业生全面了解自身的职场潜能，包括沟通表达、团队协作、问题解决、学习能力、压力管理、时间管理、责任心、适应能力和职业成熟度等九个维度的能力水平，为求职和职业发展提供参考依据。
+                </p>
+
+                <h3 class="text-lg font-semibold mb-3">测评流程</h3>
+                <ol class="list-decimal pl-5 space-y-2 text-neutral mb-6">
+                    <li>填写个人基本信息（姓名、专业、班级等）</li>
+                    <li>完成31道职场情境测试题</li>
+                    <li>填写准确的邮箱地址后，HR会发送个人测评报告和发展建议</li>
+                </ol>
+
+                <h3 class="text-lg font-semibold mb-3">注意事项</h3>
+                <ul class="list-disc pl-5 space-y-2 text-neutral mb-8">
+                    <li>测评时间约为15-20分钟，请确保有足够的时间完成</li>
+                    <li>请根据自己的真实想法和行为倾向进行选择，不必刻意追求"正确答案"</li>
+                    <li>测评结果仅供参考，不代表对个人能力的最终评价</li>
+                </ul>
+            </div>
+
+            <div class="text-center">
+                <button id="to-user-info-btn" class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow active:scale-95">
+                    继续
+                </button>
+            </div>
+        </section>
+
+        <!-- 用户信息页面 -->
+        <section id="user-info-section" class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 hidden slide-in">
+            <div class="flex items-center space-x-1 mb-6">
+                <button id="back-to-intro-btn" class="flex items-center space-x-1 text-sm px-4 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200">
+                    <i class="fa fa-arrow-left"></i>
+                    <span>返回</span>
+                </button>
+            </div>
+
+            <h2 class="text-2xl font-bold mb-6 text-center">填写个人信息</h2>
+
+            <form id="user-info-form" class="max-w-md mx-auto">
+                <div class="mb-4">
+                    <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="student-major" class="block text-sm font-medium text-gray-700 mb-1">专业 <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-major" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="student-class" class="block text-sm font-medium text-gray-700 mb-1">班级 <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-class" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="student-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱 <span class="text-red-500">*</span></label>
+                    <input type="email" id="student-email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                    <p class="text-xs text-neutral mt-1">请填写准确的邮箱地址，HR会发送个人测评报告和发展建议</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="student-school" class="block text-sm font-medium text-gray-700 mb-1">学校 <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-school" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="student-phone" class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                    <input type="tel" id="student-phone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="student-education" class="block text-sm font-medium text-gray-700 mb-1">学历 <span class="text-red-500">*</span></label>
+                    <select id="student-education" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                        <option value="">请选择</option>
+                        <option value="本科">本科</option>
+                        <option value="硕士">硕士</option>
+                        <option value="博士">博士</option>
+                        <option value="专科">专科</option>
+                    </select>
+                </div>
+                
+                <div class="text-center">
+                    <button type="submit" id="start-assessment-btn" class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow active:scale-95">
+                        开始测评
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 问题页面 -->
+        <section id="question-section" class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 hidden slide-in">
+            <!-- 进度条 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center">
+                        <span id="current-question">1</span>
+                        <span class="mx-1">/</span>
+                        <span id="total-questions">30</span>
+                        <span class="ml-2 text-sm text-neutral">题</span>
+                    </div>
+                    <div id="timer-display" class="text-sm text-neutral">
+                        <i class="fa fa-clock-o mr-1"></i>
+                        <span>用时: 00:00</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-primary h-2 rounded-full transition-all duration-500" style="width: 3%"></div>
+                </div>
+                <div class="text-right text-sm text-neutral mt-1">
+                    <span id="progress-percentage">3%</span>
+                </div>
+            </div>
+
+            <!-- 问题卡片 -->
+            <div class="bg-light rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-semibold mb-4" id="scenario-text">
+                    当你需要在团队中表达自己的观点时，你会怎么做？
+                </h3>
+                <p class="text-lg mb-6" id="question-text">
+                    你表达观点的方式是？
+                </p>
+                <div id="options-container" class="space-y-3">
+                    <!-- 选项将通过JS动态生成 -->
+                </div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="flex justify-between items-center">
+                <button id="prev-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200 active:scale-95" disabled>
+                    <i class="fa fa-arrow-left mr-2"></i> 上一题
+                </button>
+                <button id="pause-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200">
+                    <i class="fa fa-pause mr-1"></i> 暂停
+                </button>
+                <button id="next-btn" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow active:scale-95">
+                    下一题 <i class="fa fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- 移动端计时器 -->
+            <div class="mt-4 text-center text-sm text-neutral hidden md:block" id="mobile-timer">
+                <i class="fa fa-clock-o mr-1"></i>
+                用时: 00:00
+            </div>
+        </section>
+
+        <!-- 暂停模态框 -->
+        <div id="pause-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center">
+                <i class="fa fa-pause-circle text-primary text-4xl mb-4"></i>
+                <h2 class="text-xl font-bold mb-2">测评已暂停</h2>
+                <p class="text-neutral mb-4">
+                    已完成: <span id="pause-progress">1/30题</span> | 用时: <span id="pause-time">00:00</span>
+                </p>
+                <div class="flex justify-center space-x-3">
+                    <button id="resume-btn" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200">
+                        继续测评
+                    </button>
+                    <button id="restart-from-pause-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200">
+                        重新开始
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果概览 -->
+        <section id="results-overview-section" class="bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 hidden slide-in">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold mb-6">测评结果概览</h2>
+                <div class="inline-flex items-center justify-center">
+                    <div class="w-40 h-40 rounded-full bg-primary/10 flex items-center justify-center relative">
+                        <span class="text-4xl font-bold" id="total-score">0</span>
+                        <span class="text-neutral">/100</span>
+                    </div>
+                    <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white px-4 py-1 rounded-full shadow text-sm font-medium" id="overall-rating">
+                        职场潜能评估
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg max-w-md mx-auto">
+                    <p class="text-sm text-blue-700">
+                        <i class="fa fa-info-circle mr-1"></i>
+                        您的详细测评报告和发展建议将由HR通过您填写的邮箱地址发送
+                    </p>
+                </div>
+            </div>
+
+            <!-- 雷达图 -->
+            <div class="mb-10">
+                <h3 class="text-lg font-semibold mb-4">各项能力分布</h3>
+                <div class="h-80">
+                    <canvas id="radar-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- 优势与不足 -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-green-50 rounded-xl p-5 border border-green-100">
+                    <h3 class="font-semibold text-green-700 mb-3 flex items-center">
+                        <i class="fa fa-plus-circle mr-2"></i> 主要优势
+                    </h3>
+                    <ul id="strengths-list" class="space-y-2 text-sm">
+                        <!-- 优势将通过JS动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="bg-amber-50 rounded-xl p-5 border border-amber-100">
+                    <h3 class="font-semibold text-amber-700 mb-3 flex items-center">
+                        <i class="fa fa-exclamation-circle mr-2"></i> 待提升领域
+                    </h3>
+                    <ul id="weaknesses-list" class="space-y-2 text-sm">
+                        <!-- 不足将通过JS动态生成 -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 发展建议 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">学习与发展资源</h3>
+                <div class="bg-light p-5 rounded-lg">
+                    <div class="mt-6">
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <h4 class="font-medium text-primary mb-2">推荐阅读</h4>
+                            <ul class="text-sm space-y-2 text-neutral">
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《高效能人士的七个习惯》- 史蒂芬·柯维</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《沟通的方法》- 脱不花</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《原则》- 雷·达里奥</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《思考，快与慢》- 丹尼尔·卡尼曼</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="restart-assessment-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-neutral hover:bg-gray-100 transition-all duration-200 active:scale-95">
+                    <i class="fa fa-refresh mr-2"></i> 重新测评
+                </button>
+            </div>
+        </section>
+
+        <!-- 管理员仪表板 -->
+        <section id="admin-dashboard-section" class="hidden bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">管理员仪表板</h2>
+                <div>
+                    <span class="text-sm text-neutral mr-3">登录状态: <span class="text-green-500">已登录</span></span>
+                    <button id="admin-logout-btn" class="px-4 py-1 border border-gray-300 rounded-lg text-sm text-neutral hover:bg-gray-100 transition-all duration-200 active:scale-95">
+                        <i class="fa fa-sign-out mr-1"></i> 退出登录
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 统计概览 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-light rounded-xl p-5 border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-neutral text-sm">总测评人数</p>
+                            <h3 class="text-3xl font-bold mt-1" id="total-assessments">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <i class="fa fa-users text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-light rounded-xl p-5 border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-neutral text-sm">平均总分</p>
+                            <h3 class="text-3xl font-bold mt-1" id="average-total-score">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                            <i class="fa fa-line-chart text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-light rounded-xl p-5 border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-neutral text-sm">平均完成时间</p>
+                            <h3 class="text-3xl font-bold mt-1" id="average-completion-time">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                            <i class="fa fa-clock-o text-accent"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表统计 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-light rounded-xl p-5 border border-gray-100">
+                    <h3 class="font-semibold mb-4">各维度平均得分</h3>
+                    <div class="h-64">
+                        <canvas id="admin-dimensions-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-light rounded-xl p-5 border border-gray-100">
+                    <h3 class="font-semibold mb-4">测评成绩分布</h3>
+                    <div class="h-64">
+                        <canvas id="admin-scores-distribution-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 专业分布统计 -->
+            <div class="bg-light rounded-xl p-5 border border-gray-100 mb-8">
+                <h3 class="font-semibold mb-4">专业分布</h3>
+                <div class="h-64">
+                    <canvas id="major-distribution-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 测评者列表 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4">测评记录</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">姓名</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">专业</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">班级</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">总分</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">测评日期</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-neutral uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assessments-list" class="divide-y divide-gray-200">
+                            <!-- 测评记录将通过JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 简易报告 -->
+        <section id="simple-report-section" class="hidden bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">简易分析报告</h2>
+                <button id="back-to-dashboard-from-simple-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-neutral hover:bg-gray-100 transition-all duration-200 active:scale-95">
+                    <i class="fa fa-tachometer mr-1"></i> 返回仪表板
+                </button>
+            </div>
+            
+            <!-- 报告头部 -->
+            <div class="border-b pb-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold mb-1" id="simple-report-name">学生姓名</h3>
+                        <p class="text-neutral" id="simple-report-info">专业 | 班级 | 学历</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 text-right">
+                        <p class="text-neutral text-sm mb-1">测评日期</p>
+                        <p class="font-medium" id="simple-report-date">2024年6月1日</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 总体评分 -->
+            <div class="flex flex-col md:flex-row items-center justify-between bg-light p-5 rounded-xl mb-6">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h4 class="text-neutral text-sm mb-1">总体评分</h4>
+                    <div class="flex items-center">
+                        <span class="text-4xl font-bold mr-2" id="simple-total-score">0</span>
+                        <span class="text-neutral">/100</span>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                        <div id="simple-total-score-bar" class="h-3 rounded-full bg-primary" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 评级 -->
+            <div class="mb-6 text-center">
+                <span class="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary font-medium" id="simple-overall-rating">待评级</span>
+            </div>
+            
+            <!-- 雷达图 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4 text-center">各维度得分</h3>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-md h-80">
+                        <canvas id="simple-radar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 优势与不足 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- 优势 -->
+                <div class="border rounded-xl p-5">
+                    <h3 class="text-lg font-semibold mb-4 text-center text-green-600">优势</h3>
+                    <ul class="space-y-3" id="simple-strengths-list">
+                        <!-- 优势将通过JS动态生成 -->
+                    </ul>
+                </div>
+                
+                <!-- 不足 -->
+                <div class="border rounded-xl p-5">
+                    <h3 class="text-lg font-semibold mb-4 text-center text-red-600">不足</h3>
+                    <ul class="space-y-3" id="simple-weaknesses-list">
+                        <!-- 不足将通过JS动态生成 -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 详细报告 -->
+        <section id="detailed-report-section" class="hidden bg-white rounded-xl shadow-md p-6 md:p-8 mb-8 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">详细测评报告</h2>
+                <div class="flex space-x-3">
+                    <button id="back-to-dashboard-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-neutral hover:bg-gray-100 transition-all duration-200 active:scale-95">
+                        <i class="fa fa-tachometer mr-1"></i> 返回仪表板
+                    </button>
+                    <button id="admin-download-report-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow active:scale-95">
+                        <i class="fa fa-download mr-1"></i> 下载报告
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 免责声明 -->
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-6">
+                <p class="text-sm text-amber-800">
+                    <i class="fa fa-info-circle mr-1"></i> 测评说明：本报告基于作答情况生成，旨在帮助了解职场潜能状况，为求职和职业发展提供参考。本次测评报告仅根据本次测评的回答内容进行分析，不代表隆链公司对候选人的评价。
+                </p>
+            </div>
+            
+            <!-- 报告头部 -->
+            <div class="border-b pb-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold mb-1" id="report-name">学生姓名</h3>
+                        <p class="text-neutral" id="report-info">专业 | 班级 | 学历</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 text-right">
+                        <p class="text-neutral text-sm mb-1">测评日期</p>
+                        <p class="font-medium" id="report-date">2024年6月1日</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col md:flex-row items-center justify-between bg-light p-5 rounded-xl">
+                    <div class="text-center md:text-left mb-4 md:mb-0">
+                        <h4 class="text-neutral text-sm mb-1">总体评分</h4>
+                        <div class="flex items-center">
+                            <span class="text-4xl font-bold mr-2" id="detail-total-score">0</span>
+                            <span class="text-neutral">/100</span>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div id="total-score-bar" class="h-3 rounded-full bg-primary" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>良好</span>
+                            <span>优秀</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 各项维度详细分析 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4">维度详细分析</h3>
+                
+                <!-- 维度1 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">沟通表达</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension1-score-container">
+                            <span id="dimension1-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension1-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension1-analysis">
+                            该生在沟通表达方面具备一定的能力，能够清晰地表达自己的想法，但在复杂情境下的沟通策略还需要进一步提升。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension1-suggestions">
+                                <li>练习结构化表达，如使用STAR法则（情境、任务、行动、结果）</li>
+                                <li>学习积极倾听技巧，提高对他人观点的理解能力</li>
+                                <li>参与小组讨论和演讲活动，积累沟通经验</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度2 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">团队协作</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension2-score-container">
+                            <span id="dimension2-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension2-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension2-analysis">
+                            该生具备一定的团队协作意识，能够在团队中完成分配的任务，但在主动承担责任和协调团队资源方面还有提升空间。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension2-suggestions">
+                                <li>在团队项目中主动承担更多责任，尤其是在遇到困难时</li>
+                                <li>学习团队管理和协调技巧，提高团队效率</li>
+                                <li>培养同理心，更好地理解团队成员的需求和动机</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度3 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">问题解决</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension3-score-container">
+                            <span id="dimension3-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension3-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension3-analysis">
+                            该生在问题解决方面表现较好，能够分析问题并找到基本解决方案，但在面对复杂问题时的系统性和创新性还有提升空间。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension3-suggestions">
+                                <li>学习更多的问题分析框架和工具，提高分析效率</li>
+                                <li>培养创造性思维，探索更多创新的解决方案</li>
+                                <li>练习在压力下做出决策的能力，提高应变能力</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度4 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">学习适应</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension4-score-container">
+                            <span id="dimension4-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension4-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension4-analysis">
+                            该生展现出较强的学习能力，能够快速掌握新知识和技能，但在知识体系化和应用创新方面还有提升空间。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension4-suggestions">
+                                <li>建立个人知识管理系统，将零散知识系统化</li>
+                                <li>针对重要领域进行深度学习，形成专业优势</li>
+                                <li>培养跨界学习能力，拓宽知识视野</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度5 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">职业认知</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension5-score-container">
+                            <span id="dimension5-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension5-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension5-analysis">
+                            该生对自己的职业发展有初步想法，但缺乏明确的规划和目标。在职业决策时，可能会受到外界因素的影响。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension5-suggestions">
+                                <li>进行自我评估，明确自己的优势、劣势、兴趣和价值观</li>
+                                <li>制定短期和长期职业目标，并分解为可执行的步骤</li>
+                                <li>寻求职业导师的指导，获取行业洞察和发展建议</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度6 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">创新思维</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension6-score-container">
+                            <span id="dimension6-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension6-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension6-analysis">
+                            该生在创新思维方面展现出一定的潜力，但在实际应用中还需要更多的练习和培养。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension6-suggestions">
+                                <li>培养批判性思维，敢于质疑常规</li>
+                                <li>尝试从不同角度思考问题，寻找创新解决方案</li>
+                                <li>积极参与创新活动，积累实践经验</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度7 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">时间管理</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension7-score-container">
+                            <span id="dimension7-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension7-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension7-analysis">
+                            该生能够完成基本的时间规划，但在面对多重任务和突发情况时的时间分配能力还有待提高。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension7-suggestions">
+                                <li>学习使用时间管理工具，如四象限法则、番茄工作法等</li>
+                                <li>制定每日计划，并根据优先级合理安排时间</li>
+                                <li>学会拒绝不必要的干扰，提高工作效率</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度8 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">情绪管理</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension8-score-container">
+                            <span id="dimension8-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension8-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension8-analysis">
+                            该生在情绪控制方面有一定的基础，但在面对压力和挫折时，情绪的稳定性还有待加强。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension8-suggestions">
+                                <li>学习情绪调节技巧，如深呼吸、冥想等</li>
+                                <li>培养积极的心态，学会从挫折中寻找成长机会</li>
+                                <li>建立健康的生活习惯，保持身心平衡</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 维度9 -->
+                <div class="mb-6 border rounded-xl overflow-hidden">
+                    <div class="bg-light p-4 border-b flex justify-between items-center">
+                        <h4 class="font-semibold">领导力</h4>
+                        <span class="px-3 py-1 rounded-full text-sm" id="dimension9-score-container">
+                            <span id="dimension9-score">0</span>/100
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="dimension9-bar" class="h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-neutral mb-4">
+                            <span>待提升</span>
+                            <span>中等</span>
+                            <span>优秀</span>
+                        </div>
+                        <p class="text-sm text-neutral mb-4" id="dimension9-analysis">
+                            该生在团队协作中展现出一定的影响力，但在领导力方面还需要更多的实践和培养。
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                            <h5 class="font-medium text-primary mb-2">提升建议</h5>
+                            <ul class="list-disc pl-5 space-y-1 text-neutral" id="dimension9-suggestions">
+                                <li>主动承担团队任务，锻炼组织和协调能力</li>
+                                <li>学习有效的团队管理技巧，了解团队成员的需求</li>
+                                <li>培养决策能力和问题解决能力，为团队提供支持</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 深度个性化分析 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">深度个性化分析</h3>
+                <div class="bg-light p-5 rounded-lg">
+                    <div id="personalized-analysis-content" class="text-sm text-neutral space-y-4">
+                        <!-- 深度分析内容将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 完整答题记录 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">完整答题记录</h3>
+                <div class="overflow-x-auto">
+                    <div id="complete-answers-container" class="w-full">
+                        <!-- 答题记录表格将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 发展建议 -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">个性化发展建议</h3>
+                <div class="bg-light p-5 rounded-lg">
+                    <p class="text-sm text-neutral mb-4" id="personalized-detail-suggestions">
+                        基于测评结果，我们建议该生重点关注以下几个方面的提升：首先，加强沟通表达能力的训练，特别是在复杂情境下的表达清晰度和条理性；其次，提高团队协作能力，主动承担更多责任；此外，继续保持学习能力的优势，同时注重知识的体系化和应用创新；最后，加强职业规划，明确职业目标并制定相应的发展计划。
+                    </p>
+                    
+                    <div class="mt-6">
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <h4 class="font-medium text-primary mb-2">推荐阅读</h4>
+                            <ul class="text-sm space-y-2 text-neutral">
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《高效能人士的七个习惯》- 史蒂芬·柯维</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《沟通的方法》- 脱不花</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《原则》- 雷·达里奥</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《思考，快与慢》- 丹尼尔·卡尼曼</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-book text-primary mt-1 mr-2"></i>
+                                    <span>《远见》- 布赖恩·费瑟斯通豪</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-8 mt-16">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fa fa-line-chart text-primary text-2xl"></i>
+                        <h3 class="text-xl font-bold">学生职场潜能测评</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        专业的职场潜能测评工具，帮助应届毕业生了解自身职场能力，为求职做好准备。
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fa fa-envelope text-primary mt-1 mr-2"></i>
+                            <span>hr@lonlink.com</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-link text-primary mt-1 mr-2"></i>
+                            <a href="https://mp.weixin.qq.com/s/nMQO5kvb2VEJ5UbjRgZ4jA" class="text-primary hover:underline" target="_blank">关于我们</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-6 text-center text-sm text-gray-500">
+                <p>© 2025 学生职场潜能测评 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 全局变量
+        let currentQuestionIndex = 0;
+        let selectedOptions = [];
+        let isAdminView = false;
+        let userInfo = {};
+        let secondsElapsed = 0;
+        let timerInterval = null;
+        let isLoggedIn = false;
+        
+        // 测评问题
+        const questions = [
+            // 沟通能力
+            {
+                id: 1,
+                text: "你刚加入一个项目组，第一次团队会议上，组长分配的任务与你的专业方向不太一致。你会怎么做？",
+                dimension: "communication",
+                options: [
+                    "先按分配的任务执行，在实践中逐步了解其与专业的关联",
+                    "私下与有经验的同事交流，了解该任务的背景和意义",
+                    "在会议讨论环节，分享自己的专业方向，探讨可能的调整",
+                    "先接受任务，同时在工作中寻找将专业知识融入其中的机会",
+                    "会后与组长单独沟通，说明自己的专业优势，探讨更合适的分工"
+                ]
+            },
+            {
+                id: 2,
+                text: "在远程线上会议中，你发现自己的观点被其他同事误解，并且讨论朝着错误方向发展。你会如何处理？",
+                dimension: "communication",
+                options: [
+                    "等待会议休息时，私下与关键人物澄清自己的观点",
+                    "在聊天区发送简短文字，纠正误解的核心点",
+                    "抓住发言机会，用不同的表达方式重新阐述自己的观点",
+                    "先肯定讨论中的合理部分，再引导到正确的理解上",
+                    "请求主持人给予简短时间，用具体例子说明自己的原意"
+                ]
+            },
+            {
+                id: 3,
+                text: "你的导师/上级用专业术语布置了一项任务，其中有几个关键点你不太理解。你会怎么做？",
+                dimension: "communication",
+                options: [
+                    "先记录下任务要点，尝试通过网络搜索理解专业术语",
+                    "向同学/同事请教这些术语的含义，再开始着手任务",
+                    "按照自己的理解先行动，遇到具体问题再请教",
+                    "礼貌地请导师/上级用更通俗的语言解释不明确的地方",
+                    "先查阅相关资料形成初步理解，再带着具体问题请教"
+                ]
+            },
+            {
+                id: 4,
+                text: "在小组项目展示前，你发现同组成员准备的部分内容与整体主题有偏差。时间已经很紧张了，你会如何处理？",
+                dimension: "communication",
+                options: [
+                    "考虑时间限制，建议保持原样，展示时强调一致的部分",
+                    "与该成员快速沟通，了解其想法，寻找折中的呈现方式",
+                    "向组长反映情况，由组长协调是否需要调整",
+                    "主动提出协助修改，确保内容与主题一致",
+                    "建议在展示时增加过渡说明，使偏差内容与主题更好衔接"
+                ]
+            },
+            
+            // 团队协作
+            {
+                id: 5,
+                text: "在团队项目中，有位成员经常迟到或缺席会议，影响了项目进度。作为团队一员，你会怎么做？",
+                dimension: "teamwork",
+                options: [
+                    "记录每次会议要点，会后主动分享给该成员，确保其了解进展",
+                    "私下询问该成员是否有困难，看是否能提供帮助",
+                    "向团队负责人反映情况，由负责人处理",
+                    "在团队会议上提出建立明确的考勤和进度跟踪机制",
+                    "尝试重新分配任务，减少该成员缺席对整体进度的影响"
+                ]
+            },
+            {
+                id: 6,
+                text: "团队讨论中出现了两种不同的解决方案，各有优缺点，大家意见不一。你倾向于其中一种方案，但支持者较少。你会怎么做？",
+                dimension: "teamwork",
+                options: [
+                    "尊重多数人的选择，积极参与执行被选中的方案",
+                    "提出进行小规模测试，用实际结果来评估两种方案",
+                    "尝试整合两种方案的优点，提出新的折中方案",
+                    "坚持表达自己的观点和理由，直到讨论结束",
+                    "建议按不同方案分工推进，后期再合并最优成果"
+                ]
+            },
+            {
+                id: 7,
+                text: "团队项目即将截止，但有部分任务未能按时完成。作为团队成员，你已经完成了自己的部分。你会怎么做？",
+                dimension: "teamwork",
+                options: [
+                    "相信其他成员能完成自己的任务，不主动介入",
+                    "询问未完成任务的成员是否需要帮助，根据自己的能力提供支持",
+                    "建议团队召开紧急会议，重新分配剩余任务",
+                    "主动承担一部分未完成的任务，确保项目按时提交",
+                    "帮助分析延迟原因，提供资源或方法上的建议"
+                ]
+            },
+            {
+                id: 8,
+                text: "在团队合作中，你发现自己的工作成果被其他成员错误地归功于自己。你会如何处理？",
+                dimension: "teamwork",
+                options: [
+                    "不特别指出，认为团队成果比个人功劳更重要",
+                    "私下向该成员说明实际情况，避免误会",
+                    "在适当场合自然地提及各成员的具体贡献",
+                    "请团队负责人在总结时说明每个人的贡献",
+                    "认为这只是偶然失误，不需要特别处理"
+                ]
+            },
+            
+            // 问题解决能力
+            {
+                id: 9,
+                text: "你负责的一个课程作业需要使用一种你不熟悉的软件工具，而截止日期临近。你会如何解决这个问题？",
+                dimension: "problem-solving",
+                options: [
+                    "寻找是否有功能相似且自己熟悉的替代工具",
+                    "快速浏览基础教程，边学边做，优先完成核心功能",
+                    "请教熟悉该软件的同学，获取关键操作指导",
+                    "将任务分解为小块，逐个学习完成每个部分所需的技能",
+                    "向老师说明情况，询问是否可以采用其他方式完成"
+                ]
+            },
+            {
+                id: 10,
+                text: "在准备一场重要的展示时，你发现原本计划使用的数据存在错误，而重新收集数据已经来不及了。你会怎么做？",
+                dimension: "problem-solving",
+                options: [
+                    "取消使用该部分数据，调整展示重点到其他可靠内容",
+                    "在展示中说明数据的局限性，同时提供可能的解释",
+                    "寻找替代数据源，即使不够理想也比错误数据好",
+                    "重新分析现有数据，找出其他有意义的发现",
+                    "坦诚说明情况，将重点放在分析方法而非具体数据上"
+                ]
+            },
+            {
+                id: 11,
+                text: "你和同学合作完成一个项目，在执行过程中发现最初的方案存在重大缺陷。你会如何处理？",
+                dimension: "problem-solving",
+                options: [
+                    "继续按原方案执行，同时记录问题，在总结时提及",
+                    "暂停执行，组织团队重新评估方案，找出问题根源",
+                    "寻找最小改动方案，在现有基础上修复缺陷",
+                    "请教老师或专业人士，获取解决方案建议",
+                    "快速评估多个可能的解决方案，选择最优的一个实施"
+                ]
+            },
+            {
+                id: 12,
+                text: "在求职过程中，你收到两个公司的offer，各有优缺点，难以抉择。你会如何做决定？",
+                dimension: "problem-solving",
+                options: [
+                    "列出自己最看重的因素，给每个offer打分，选择分数高的",
+                    "咨询行业内的前辈，听取他们对两家公司的评价",
+                    "凭直觉选择一个自己感觉更合适的",
+                    "尝试联系两家公司的员工，了解内部工作环境",
+                    "设定决策期限，在期限前综合所有信息做出选择"
+                ]
+            },
+            
+            // 学习能力
+            {
+                id: 13,
+                text: "你参加了一个行业讲座，内容涉及很多你不熟悉的专业术语和概念。你会如何处理这些新知识？",
+                dimension: "learning-ability",
+                options: [
+                    "记录下关键术语，讲座后逐一查阅理解",
+                    "向同行或老师请教不懂的问题，获取解释",
+                    "根据讲座内容，制定后续系统学习的计划",
+                    "寻找相关的入门资料，从基础开始学习",
+                    "加入相关的学习社区，与他人交流讨论这些新概念"
+                ]
+            },
+            {
+                id: 14,
+                text: "你学习了一个新的编程技能，但在实际应用时遇到了无法解决的错误。你会如何处理？",
+                dimension: "learning-ability",
+                options: [
+                    "反复检查代码，尝试不同的写法，直到解决问题",
+                    "在网上搜索错误信息，寻找解决方案",
+                    "结构化地分析问题，逐步缩小可能的错误范围",
+                    "向有经验的开发者请教，展示自己已尝试的方法",
+                    "暂时搁置该问题，先学习相关的基础知识，再回头解决"
+                ]
+            },
+            {
+                id: 15,
+                text: "为了准备毕业设计，你需要学习一个全新的研究领域。你会如何规划自己的学习？",
+                dimension: "learning-ability",
+                options: [
+                    "按照导师提供的资料，按部就班地学习",
+                    "先快速浏览相关文献，了解该领域的基本框架和热点",
+                    "从经典教材入手，系统学习该领域的基础知识",
+                    "先确定研究问题，再有针对性地查找和学习相关资料",
+                    "寻找该领域的在线课程，跟随课程进度学习"
+                ]
+            },
+            {
+                id: 16,
+                text: "你发现同专业的同学都在学习一项新技能，而你对此几乎一无所知。你会如何应对？",
+                dimension: "learning-ability",
+                options: [
+                    "观察一段时间，了解这项技能的应用价值后再决定是否学习",
+                    "立即开始学习，不想落后于同学",
+                    "评估该技能与自己职业规划的相关性，再决定学习优先级",
+                    "找到入门资源，每天安排固定时间学习",
+                    "与正在学习的同学交流，获取学习经验和资源推荐"
+                ]
+            },
+            
+            // 压力管理
+            {
+                id: 17,
+                text: "期末周来临，你有多个考试和论文需要完成，感到压力很大。你会如何应对？",
+                dimension: "stress-management",
+                options: [
+                    "按照截止日期排序，先完成最紧急的任务",
+                    "制定详细的学习计划，合理分配时间给每个任务",
+                    "每天安排固定的休息和放松时间，保持规律作息",
+                    "先集中精力完成自己最擅长的科目，再处理其他任务",
+                    "寻求同学互助，共同复习或讨论论文思路，减轻压力"
+                ]
+            },
+            {
+                id: 18,
+                text: "在一次重要的项目展示后，老师/评委对你的作品提出了严厉的批评和改进建议。你会如何反应？",
+                dimension: "stress-management",
+                options: [
+                    "认真记录所有批评意见，暂时不做辩解",
+                    "感到沮丧，但会尝试从批评中找到有价值的建议",
+                    "当场感谢评委的意见，并简要说明自己的想法",
+                    "先冷静下来，稍后再仔细分析批评的合理性",
+                    "主动与老师/评委预约，深入了解具体的改进方向"
+                ]
+            },
+            {
+                id: 19,
+                text: "你同时负责两个重要项目，都需要在差不多的时间完成，而你发现很难同时保证两者的质量。你会如何处理？",
+                dimension: "stress-management",
+                options: [
+                    "评估两个项目的核心要求，合理分配时间和精力",
+                    "向负责人说明情况，请求调整其中一个项目的截止时间",
+                    "优先保证自己更擅长的项目质量，另一个尽力而为",
+                    "寻找可能的资源或人员协助，分担部分工作",
+                    "延长工作时间，牺牲部分休息，努力同时保证两个项目的质量"
+                ]
+            },
+            {
+                id: 20,
+                text: "你准备了很久的面试，结果没有通过。你会如何调整自己的状态？",
+                dimension: "stress-management",
+                options: [
+                    "允许自己短暂失落，然后分析面试中可能的不足",
+                    "立即投入下一个面试的准备，不让自己沉溺于失败",
+                    "向有经验的人请教，了解自己可能存在的问题",
+                    "反思自己的职业定位，是否与所面试的岗位匹配",
+                    "总结经验教训，制定针对性的改进计划"
+                ]
+            },
+            
+            // 时间管理
+            {
+                id: 21,
+                text: "你有一个月时间完成一篇课程论文，但你总是拖延，直到最后一周才开始。你会如何处理？",
+                dimension: "time-management",
+                options: [
+                    "接受自己的拖延习惯，利用最后一周高效完成",
+                    "制定最后一周的详细计划，每天完成固定部分",
+                    "评估论文要求，调整范围，确保能按时完成",
+                    "寻求同学帮助，分担部分查阅资料的工作",
+                    "从这次经历中吸取教训，下次提前规划"
+                ]
+            },
+            {
+                id: 22,
+                text: "你原本计划好周末完成作业和复习，但突然接到朋友的邀请参加一个难得的活动。你会如何选择？",
+                dimension: "time-management",
+                options: [
+                    "坚持原计划学习，错过这次活动",
+                    "接受邀请参加活动，学习任务推迟到下周",
+                    "参加活动，但缩短时间，其余时间用来学习",
+                    "评估作业量和重要性，再决定是否参加活动",
+                    "提前完成部分学习任务，确保既能参加活动又不影响学习"
+                ]
+            },
+            {
+                id: 23,
+                text: "你每天都觉得很忙，但总感觉没有完成什么重要的事情。你会如何改善这种情况？",
+                dimension: "time-management",
+                options: [
+                    "记录一周的时间使用情况，分析时间浪费在哪里",
+                    "学习时间管理方法，按重要性和紧急性安排任务",
+                    "减少社交媒体使用时间，增加专注工作的时间",
+                    "每天只设定2-3个最重要的目标，确保完成",
+                    "尝试番茄工作法等时间管理技巧，提高专注度"
+                ]
+            },
+            {
+                id: 24,
+                text: "在学习或工作时，你经常被手机通知、社交媒体等干扰，影响效率。你会如何应对？",
+                dimension: "time-management",
+                options: [
+                    "将手机调至静音模式，放在视线之外",
+                    "使用专注软件，限制自己使用社交媒体的时间",
+                    "设定固定的时间查看手机，其他时间专注工作",
+                    "将大任务分解为小任务，每完成一个小任务奖励自己查看手机",
+                    "尝试提高自己的抗干扰能力，训练在有干扰的环境下工作"
+                ]
+            },
+            
+            // 责任心
+            {
+                id: 25,
+                text: "你负责的小组项目中，由于你的疏忽导致了一个错误，影响了整体结果。你会如何处理？",
+                dimension: "responsibility",
+                options: [
+                    "主动承认错误，并提出具体的补救措施",
+                    "分析错误原因，确保将来不再犯类似错误",
+                    "向团队道歉，承担相应的责任和后果",
+                    "除了纠正错误，还思考如何改进流程预防类似问题",
+                    "与团队一起解决问题，将影响降到最低"
+                ]
+            },
+            {
+                id: 26,
+                text: "你答应帮助同学完成一个任务，但后来发现自己时间不够，可能无法按时完成。你会如何处理？",
+                dimension: "responsibility",
+                options: [
+                    "提前告知同学情况，看是否可以延期或寻找替代方案",
+                    "尽自己所能完成一部分，并详细说明未完成部分",
+                    "推荐其他可能有时间的同学来协助完成",
+                    "调整自己的时间安排，优先保证完成承诺的任务",
+                    "坦诚说明情况，道歉并解释原因"
+                ]
+            },
+            {
+                id: 27,
+                text: "在实习期间，你发现公司的一个流程存在问题，可能导致效率低下，但这不属于你负责的范围。你会怎么做？",
+                dimension: "responsibility",
+                options: [
+                    "认为与自己无关，不采取任何行动",
+                    "观察一段时间，确认问题后再向相关人员反映",
+                    "向直属领导提出自己的观察和改进建议",
+                    "不仅指出问题，还会提出具体的改进方案供参考",
+                    "先了解该流程的背景和原因，再决定是否提出建议"
+                ]
+            },
+            
+            // 适应能力
+            {
+                id: 28,
+                text: "你刚转到一个新的班级/部门，发现这里的学习/工作方式与你之前习惯的有很大不同。你会如何适应？",
+                dimension: "adaptability",
+                options: [
+                    "观察和学习新环境的规则和文化，逐步调整自己",
+                    "坚持自己原来的有效方法，同时尝试融入新环境",
+                    "主动与新同学/同事交流，了解他们的工作方式和习惯",
+                    "向有经验的成员请教，获取适应新环境的建议",
+                    "积极参与集体活动，快速熟悉新环境和新成员"
+                ]
+            },
+            {
+                id: 29,
+                text: "学校/公司突然宣布改变一项重要的政策或流程，你认为新政策可能会给自己带来不便。你会如何反应？",
+                dimension: "adaptability",
+                options: [
+                    "虽然不认同，但还是会按要求执行，适应新政策",
+                    "了解政策改变的原因，尝试理解其合理性和必要性",
+                    "向相关部门反馈自己的困难和建议，但仍会遵守新政策",
+                    "积极调整自己的工作方式，寻找在新政策下提高效率的方法",
+                    "与同事/同学交流，分享适应新政策的经验和技巧"
+                ]
+            },
+            {
+                id: 30,
+                text: "你被安排与一位工作风格与你截然不同的同学/同事合作完成一个项目。你会如何处理？",
+                dimension: "adaptability",
+                options: [
+                    "尊重对方的工作风格，尽量配合对方的节奏",
+                    "明确分工，各自负责擅长的部分，保持必要的沟通",
+                    "尝试理解对方工作方式的优点，调整自己的方法",
+                    "寻找双方都能接受的工作方式，形成互补",
+                    "以项目目标为导向，暂时放下个人偏好，优先保证项目成功"
+                ]
+            },
+            
+            // 职场成熟度
+            {
+                id: 31,
+                text: "你收到两份工作邀请：一份是知名大公司的基础岗位，薪资一般；另一份是创业公司的核心岗位，薪资较高但风险也大。你会如何选择？",
+                dimension: "career-maturity",
+                options: [
+                    "选择大公司，看重其稳定的发展平台和培训体系",
+                    "选择创业公司，看重其成长空间和全面锻炼的机会",
+                    "根据自己的职业规划和风险承受能力做决定",
+                    "考虑行业前景，选择更有发展潜力的行业",
+                    "优先考虑工作内容与个人兴趣和专业的匹配度"
+                ]
+            }
+        ];
+
+        // 存储每个问题的选项映射关系
+        let questionOptionMaps = [];
+        
+        // 当前查看的测评ID（全局变量）
+        let currentViewingAssessmentId = null;
+        
+        // DOM元素对象
+        const sections = {
+            welcome: document.getElementById('welcome-section'),
+            intro: document.getElementById('intro-section'),
+            userInfo: document.getElementById('user-info-section'),
+            question: document.getElementById('question-section'),
+            resultsOverview: document.getElementById('results-overview-section'),
+            adminDashboard: document.getElementById('admin-dashboard-section'),
+            detailedReport: document.getElementById('detailed-report-section'),
+            simpleReport: document.getElementById('simple-report-section')
+        };
+        
+        // 按钮元素
+        const buttons = {
+            startIntro: document.getElementById('start-intro-btn'),
+            backToWelcome: document.getElementById('back-to-welcome-btn'),
+            toUserInfo: document.getElementById('to-user-info-btn'),
+            backToIntro: document.getElementById('back-to-intro-btn'),
+            startAssessment: document.getElementById('start-assessment-btn'),
+            prev: document.getElementById('prev-btn'),
+            next: document.getElementById('next-btn'),
+            pause: document.getElementById('pause-btn'),
+            resume: document.getElementById('resume-btn'),
+            restartFromPause: document.getElementById('restart-from-pause-btn'),
+            restartAssessment: document.getElementById('restart-assessment-btn'),
+            toggleView: document.getElementById('toggle-view-btn'),
+            viewText: document.getElementById('view-text'),
+            loginCancel: document.getElementById('login-cancel'),
+            loginConfirm: document.getElementById('login-confirm'),
+            adminLogout: document.getElementById('admin-logout-btn'),
+            backToDashboard: document.getElementById('back-to-dashboard-btn'),
+            adminDownloadReport: document.getElementById('admin-download-report-btn')
+        };
+        
+        // 模态框
+        const modals = {
+            adminLogin: document.getElementById('admin-login-modal'),
+            pause: document.getElementById('pause-modal')
+        };
+        
+        // 进度相关元素
+        const progress = {
+            bar: document.getElementById('progress-bar'),
+            percentage: document.getElementById('progress-percentage'),
+            currentQuestion: document.getElementById('current-question'),
+            totalQuestions: document.getElementById('total-questions')
+        };
+        
+        // 问题相关元素
+        const questionElements = {
+            scenario: document.getElementById('scenario-text'),
+            question: document.getElementById('question-text'),
+            optionsContainer: document.getElementById('options-container')
+        };
+        
+        // 定时器元素
+        const timerElements = {
+            display: document.getElementById('timer-display'),
+            mobileTimer: document.getElementById('mobile-timer'),
+            pauseTime: document.getElementById('pause-time'),
+            pauseProgress: document.getElementById('pause-progress')
+        };
+        
+        // 初始化
+        function init() {
+            bindEventListeners();
+            progress.totalQuestions.textContent = questions.length;
+            showSection(sections.welcome);
+        }
+        
+        // 绑定事件监听器
+        function bindEventListeners() {
+            // 欢迎页面
+            buttons.startIntro.addEventListener('click', () => showSection(sections.intro));
+            
+            // 介绍页面
+            buttons.backToWelcome.addEventListener('click', () => showSection(sections.welcome));
+            buttons.toUserInfo.addEventListener('click', () => showSection(sections.userInfo));
+            
+            // 用户信息页面
+            buttons.backToIntro.addEventListener('click', () => showSection(sections.intro));
+            document.getElementById('user-info-form').addEventListener('submit', handleUserInfoSubmit);
+            
+            // 问题页面
+            buttons.prev.addEventListener('click', prevQuestion);
+            buttons.next.addEventListener('click', nextQuestion);
+            buttons.pause.addEventListener('click', pauseAssessment);
+            
+            // 暂停模态框
+            buttons.resume.addEventListener('click', resumeAssessment);
+            buttons.restartFromPause.addEventListener('click', restartAssessment);
+            
+            // 结果页面
+            buttons.restartAssessment.addEventListener('click', restartAssessment);
+            
+            // 管理员相关
+            buttons.toggleView.addEventListener('click', toggleAdminView);
+            buttons.loginCancel.addEventListener('click', hideAdminLogin);
+            buttons.loginConfirm.addEventListener('click', handleAdminLogin);
+            buttons.adminLogout.addEventListener('click', handleAdminLogout);
+            buttons.backToDashboard.addEventListener('click', () => showSection(sections.adminDashboard));
+            document.getElementById('back-to-dashboard-from-simple-btn').addEventListener('click', () => showSection(sections.adminDashboard));
+            buttons.adminDownloadReport.addEventListener('click', downloadReport);
+        }
+        
+        // 处理用户信息提交
+        function handleUserInfoSubmit(e) {
+            e.preventDefault();
+            
+            userInfo = {
+                name: document.getElementById('student-name').value,
+                major: document.getElementById('student-major').value,
+                class: document.getElementById('student-class').value,
+                email: document.getElementById('student-email').value,
+                school: document.getElementById('student-school').value,
+                phone: document.getElementById('student-phone').value,
+                education: document.getElementById('student-education').value
+            };
+            
+            // 保存用户信息到localStorage
+            localStorage.setItem('careerAssessmentUserInfo', JSON.stringify(userInfo));
+            
+            // 重置问题索引和选项
+            currentQuestionIndex = 0;
+            selectedOptions = [];
+            secondsElapsed = 0;
+            
+            // 显示第一个问题
+            loadQuestion(currentQuestionIndex);
+            showSection(sections.question);
+            
+            // 启动计时器
+            startTimer();
+        }
+        
+        // 加载问题
+        function loadQuestion(index) {
+            if (index < 0 || index >= questions.length) return;
+            
+            const question = questions[index];
+            questionElements.scenario.textContent = ''; // 清空情景描述
+            questionElements.question.textContent = question.text;
+            
+            // 清空选项容器
+            questionElements.optionsContainer.innerHTML = '';
+            
+            // 如果是第一次加载这个问题，创建随机映射
+            if (!questionOptionMaps[index]) {
+                // 创建原始索引数组
+                const originalIndices = Array.from({length: question.options.length}, (_, i) => i);
+                // 随机排序
+                const shuffledIndices = [...originalIndices].sort(() => Math.random() - 0.5);
+                // 保存映射关系：显示位置 -> 原始索引
+                questionOptionMaps[index] = shuffledIndices;
+            }
+            
+            // 生成选项（使用随机映射）
+            questionOptionMaps[index].forEach((originalIndex, displayIndex) => {
+                const option = question.options[originalIndex];
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-all';
+                optionDiv.setAttribute('data-display-index', displayIndex);
+                optionDiv.setAttribute('data-original-index', originalIndex);
+                
+                // 检查是否有已选择的选项并匹配
+                if (selectedOptions[index] !== undefined && selectedOptions[index] === originalIndex) {
+                    optionDiv.classList.add('bg-primary/10', 'border-primary/30');
+                }
+                
+                const radioButton = document.createElement('div');
+                radioButton.className = 'w-5 h-5 rounded-full border-2 border-gray-300 mr-3 mt-0.5 flex-shrink-0 flex items-center justify-center';
+                
+                if (selectedOptions[index] !== undefined && selectedOptions[index] === originalIndex) {
+                    radioButton.classList.remove('border-gray-300');
+                    radioButton.classList.add('border-primary');
+                    
+                    const innerCircle = document.createElement('div');
+                    innerCircle.className = 'w-3 h-3 rounded-full bg-primary';
+                    radioButton.appendChild(innerCircle);
+                }
+                
+                const optionText = document.createElement('div');
+                optionText.className = 'text-gray-800';
+                optionText.textContent = option;
+                
+                optionDiv.appendChild(radioButton);
+                optionDiv.appendChild(optionText);
+                
+                // 添加选项点击事件
+                optionDiv.addEventListener('click', () => {
+                    selectOption(index, originalIndex);
+                });
+                
+                questionElements.optionsContainer.appendChild(optionDiv);
+            });
+            
+            // 更新进度
+            progress.currentQuestion.textContent = index + 1;
+            const progressPercentage = Math.round(((index + 1) / questions.length) * 100);
+            progress.percentage.textContent = progressPercentage + '%';
+            progress.bar.style.width = progressPercentage + '%';
+            
+            // 更新按钮状态
+            buttons.prev.disabled = index === 0;
+            
+            // 如果是最后一题，更改下一题按钮文字为提交
+            if (index === questions.length - 1) {
+                buttons.next.innerHTML = '提交 <i class="fa fa-check ml-2"></i>';
+            } else {
+                buttons.next.innerHTML = '下一题 <i class="fa fa-arrow-right ml-2"></i>';
+            }
+            
+            // 检查是否有已选择的选项，如果没有，禁用下一题按钮
+            buttons.next.disabled = selectedOptions[index] === undefined;
+        }
+        
+        // 选择选项
+        function selectOption(questionIndex, optionIndex) {
+            selectedOptions[questionIndex] = optionIndex;
+            
+            // 更新选项样式
+            const options = questionElements.optionsContainer.querySelectorAll('.option');
+            options.forEach((option) => {
+                // 获取选项的原始索引
+                const originalIndex = parseInt(option.getAttribute('data-original-index'));
+                
+                if (originalIndex === optionIndex) {
+                    // 高亮选中的选项
+                    option.classList.add('bg-primary/10', 'border-primary/30');
+                    const radioButton = option.querySelector('.flex-shrink-0');
+                    radioButton.classList.remove('border-gray-300');
+                    radioButton.classList.add('border-primary');
+                    
+                    // 确保内部圆圈存在
+                    if (!radioButton.querySelector('.bg-primary')) {
+                        const innerCircle = document.createElement('div');
+                        innerCircle.className = 'w-3 h-3 rounded-full bg-primary';
+                        radioButton.appendChild(innerCircle);
+                    }
+                } else {
+                    // 移除其他选项的高亮
+                    option.classList.remove('bg-primary/10', 'border-primary/30');
+                    const radioButton = option.querySelector('.flex-shrink-0');
+                    radioButton.classList.remove('border-primary');
+                    radioButton.classList.add('border-gray-300');
+                    
+                    // 移除内部圆圈
+                    const innerCircle = radioButton.querySelector('.bg-primary');
+                    if (innerCircle) {
+                        innerCircle.remove();
+                    }
+                }
+            });
+            
+            // 启用下一题按钮
+            buttons.next.disabled = false;
+        }
+        
+        // 上一题
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+        
+        // 下一题
+        function nextQuestion() {
+            // 如果是最后一题，提交测评
+            if (currentQuestionIndex === questions.length - 1) {
+                finishAssessment();
+            } else if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+        
+        // 暂停测评
+        function pauseAssessment() {
+            stopTimer();
+            modals.pause.classList.remove('hidden');
+            timerElements.pauseTime.textContent = formatTime(secondsElapsed);
+            timerElements.pauseProgress.textContent = (currentQuestionIndex + 1) + '/' + questions.length + '题';
+        }
+        
+        // 继续测评
+        function resumeAssessment() {
+            modals.pause.classList.add('hidden');
+            startTimer();
+        }
+        
+        // 重新开始测评
+        function restartAssessment() {
+            stopTimer();
+            modals.pause.classList.add('hidden');
+            
+            // 重置所有变量
+            currentQuestionIndex = 0;
+            selectedOptions = [];
+            secondsElapsed = 0;
+            
+            // 重新加载第一个问题
+            loadQuestion(currentQuestionIndex);
+            showSection(sections.question);
+            
+            // 启动计时器
+            startTimer();
+        }
+        
+        // 完成测评
+        function finishAssessment() {
+            stopTimer();
+            
+            // 计算得分
+            const scores = calculateScores();
+            
+            // 保存测评结果
+            saveAssessmentResult(scores);
+            
+            // 显示结果概览
+            displayResultsOverview(scores);
+            showSection(sections.resultsOverview);
+        }
+        
+        // 计算得分
+        function calculateScores() {
+            // 各个维度 - 与问题定义中的维度标识符保持一致
+            const dimensions = [
+                { name: '沟通表达', dimension: 'communication' },
+                { name: '团队协作', dimension: 'teamwork' },
+                { name: '问题解决', dimension: 'problem-solving' },
+                { name: '学习能力', dimension: 'learning-ability' },
+                { name: '压力管理', dimension: 'stress-management' },
+                { name: '时间管理', dimension: 'time-management' },
+                { name: '责任心', dimension: 'responsibility' },
+                { name: '适应能力', dimension: 'adaptability' },
+                { name: '职业成熟度', dimension: 'career-maturity' }
+            ];
+            
+            // 计算各个维度的得分
+            const dimensionScores = [];
+            let totalScore = 0;
+            let totalQuestions = 0;
+            
+            dimensions.forEach(dimension => {
+                let dimensionScore = 0;
+                let dimensionQuestions = 0;
+                
+                // 找到该维度的所有问题
+                questions.forEach((question, questionIndex) => {
+                    if (question.dimension === dimension.dimension && selectedOptions[questionIndex] !== undefined) {
+                        // 根据选项索引计算分数（5个选项对应100-60分，每差一个选项减少10分）
+                        const optionIndex = selectedOptions[questionIndex];
+                        const score = 100 - optionIndex * 10;
+                        dimensionScore += score;
+                        dimensionQuestions++;
+                        totalQuestions++;
+                    }
+                });
+                
+                // 计算该维度的最终得分（百分比）
+                let percentage = 0;
+                if (dimensionQuestions > 0) {
+                    percentage = dimensionScore / dimensionQuestions;
+                }
+                
+                dimensionScores.push({
+                    name: dimension.name,
+                    score: Math.round(percentage)
+                });
+                
+                // 累加总分
+                totalScore += percentage;
+            });
+            
+            // 计算平均总分
+            if (totalQuestions > 0) {
+                totalScore = Math.max(0, Math.min(100, Math.round(totalScore / dimensions.length)));
+            } else {
+                totalScore = 0;
+            }
+            
+            return {
+                totalScore,
+                dimensionScores
+            };
+        }
+        
+        // 保存测评结果
+        function saveAssessmentResult(scores) {
+            // 从localStorage获取现有结果
+            let assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 创建新的测评结果
+            const assessment = {
+                id: Date.now().toString(),
+                userInfo,
+                scores,
+                answers: selectedOptions, // 保存用户的答题记录
+                optionMaps: questionOptionMaps, // 保存选项映射关系，用于重建选项顺序
+                date: new Date().toLocaleDateString(),
+                time: secondsElapsed
+            };
+            
+            // 添加到结果数组
+            assessments.push(assessment);
+            
+            // 保存回localStorage
+            localStorage.setItem('careerAssessments', JSON.stringify(assessments));
+        }
+        
+        // 显示结果概览
+        function displayResultsOverview(scores) {
+            // 显示总分
+            document.getElementById('total-score').textContent = scores.totalScore;
+            
+            // 根据总分设置评级
+            let rating = '';
+            if (scores.totalScore >= 90) {
+                rating = '优秀';
+            } else if (scores.totalScore >= 80) {
+                rating = '良好';
+            } else if (scores.totalScore >= 70) {
+                rating = '中等';
+            } else if (scores.totalScore >= 60) {
+                rating = '及格';
+            } else {
+                rating = '待提升';
+            }
+            document.getElementById('overall-rating').textContent = rating;
+            
+            // 更新雷达图
+            updateRadarChart(scores.dimensionScores);
+            
+            // 分析优势和不足
+            analyzeStrengthsAndWeaknesses(scores.dimensionScores);
+        }
+        
+        // 更新雷达图
+        function updateRadarChart(dimensionScores) {
+            const ctx = document.getElementById('radar-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (window.radarChart) {
+                window.radarChart.destroy();
+            }
+            
+            // 创建新图表
+            window.radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: dimensionScores.map(d => d.name),
+                    datasets: [{
+                        label: '得分',
+                        data: dimensionScores.map(d => d.score),
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 分析优势和不足
+        function analyzeStrengthsAndWeaknesses(dimensionScores) {
+            const strengthsList = document.getElementById('strengths-list');
+            const weaknessesList = document.getElementById('weaknesses-list');
+            
+            strengthsList.innerHTML = '';
+            weaknessesList.innerHTML = '';
+            
+            // 根据得分排序
+            const sortedDimensions = [...dimensionScores].sort((a, b) => b.score - a.score);
+            
+            // 找出前两名的优势
+            const strengths = sortedDimensions.slice(0, 2);
+            strengths.forEach(strength => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                li.innerHTML = `<i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>${strength.name}（${strength.score}分）</span>`;
+                strengthsList.appendChild(li);
+            });
+            
+            // 找出后两名的不足
+            const weaknesses = sortedDimensions.slice(-2);
+            weaknesses.forEach(weakness => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                li.innerHTML = `<i class="fa fa-exclamation-circle text-amber-500 mt-1 mr-2"></i>
+                <span>${weakness.name}（${weakness.score}分）</span>`;
+                weaknessesList.appendChild(li);
+            });
+        }
+        
+        // 切换管理员视图
+        function toggleAdminView() {
+            if (isLoggedIn) {
+                showAdminDashboard();
+            } else {
+                modals.adminLogin.classList.remove('hidden');
+            }
+        }
+        
+        // 隐藏管理员登录模态框
+        function hideAdminLogin() {
+            modals.adminLogin.classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+        }
+        
+        // 处理管理员登录
+        function handleAdminLogin() {
+            const password = document.getElementById('admin-password').value;
+            
+            // 简单的密码验证（实际应用中应该使用更安全的验证方式）
+            if (password === 'Lonlink789') {
+                isLoggedIn = true;
+                hideAdminLogin();
+                buttons.viewText.textContent = '管理员视图';
+                showAdminDashboard();
+            } else {
+                alert('密码错误，请重试。');
+            }
+        }
+        
+        // 处理管理员登出
+        function handleAdminLogout() {
+            isLoggedIn = false;
+            buttons.viewText.textContent = '管理员登录';
+            showSection(sections.welcome);
+        }
+        
+        // 显示管理员仪表板
+        function showAdminDashboard() {
+            updateAdminStats();
+            updateAdminDimensionsChart();
+            updateAdminScoresDistributionChart();
+            updateMajorDistributionChart();
+            updateAssessmentsList();
+            showSection(sections.adminDashboard);
+        }
+        
+        // 更新管理员统计数据
+        function updateAdminStats() {
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 总测评人数
+            document.getElementById('total-assessments').textContent = assessments.length;
+            
+            // 计算平均总分
+            if (assessments.length > 0) {
+                const totalScores = assessments.reduce((sum, assessment) => sum + assessment.scores.totalScore, 0);
+                const averageScore = Math.round(totalScores / assessments.length);
+                document.getElementById('average-total-score').textContent = averageScore;
+                
+                // 计算平均完成时间
+                const totalTime = assessments.reduce((sum, assessment) => sum + assessment.time, 0);
+                const averageTime = Math.round(totalTime / assessments.length);
+                document.getElementById('average-completion-time').textContent = formatTime(averageTime);
+            } else {
+                document.getElementById('average-total-score').textContent = 0;
+                document.getElementById('average-completion-time').textContent = '00:00';
+            }
+        }
+        
+        // 更新管理员维度得分图表
+        function updateAdminDimensionsChart() {
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 计算各维度的平均分
+            const dimensionAverages = {};
+            const dimensionCount = {};
+            
+            if (assessments.length > 0) {
+                // 初始化所有维度
+                assessments[0].scores.dimensionScores.forEach(dimension => {
+                    dimensionAverages[dimension.name] = 0;
+                    dimensionCount[dimension.name] = 0;
+                });
+                
+                // 累加所有维度得分
+                assessments.forEach(assessment => {
+                    assessment.scores.dimensionScores.forEach(dimension => {
+                        dimensionAverages[dimension.name] += dimension.score;
+                        dimensionCount[dimension.name]++;
+                    });
+                });
+                
+                // 计算平均值
+                Object.keys(dimensionAverages).forEach(dimension => {
+                    if (dimensionCount[dimension] > 0) {
+                        dimensionAverages[dimension] = Math.round(dimensionAverages[dimension] / dimensionCount[dimension]);
+                    }
+                });
+            }
+            
+            const ctx = document.getElementById('admin-dimensions-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (window.adminDimensionsChart) {
+                window.adminDimensionsChart.destroy();
+            }
+            
+            // 创建新图表
+            window.adminDimensionsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dimensionAverages),
+                    datasets: [{
+                        label: '平均分',
+                        data: Object.values(dimensionAverages),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 更新测评成绩分布图表
+        function updateAdminScoresDistributionChart() {
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 定义分数段
+            const scoreRanges = [
+                { min: 0, max: 59, label: '0-59分' },
+                { min: 60, max: 69, label: '60-69分' },
+                { min: 70, max: 79, label: '70-79分' },
+                { min: 80, max: 89, label: '80-89分' },
+                { min: 90, max: 100, label: '90-100分' }
+            ];
+            
+            // 统计各分数段的人数
+            const distribution = scoreRanges.map(range => {
+                const count = assessments.filter(assessment => 
+                    assessment.scores.totalScore >= range.min && 
+                    assessment.scores.totalScore <= range.max
+                ).length;
+                return { label: range.label, count };
+            });
+            
+            const ctx = document.getElementById('admin-scores-distribution-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (window.adminScoresDistributionChart) {
+                window.adminScoresDistributionChart.destroy();
+            }
+            
+            // 创建新图表
+            window.adminScoresDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: distribution.map(item => item.label),
+                    datasets: [{
+                        data: distribution.map(item => item.count),
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(139, 92, 246, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 更新专业分布图表
+        function updateMajorDistributionChart() {
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 统计各专业的人数
+            const majorCount = {};
+            assessments.forEach(assessment => {
+                const major = assessment.userInfo.major;
+                if (major in majorCount) {
+                    majorCount[major]++;
+                } else {
+                    majorCount[major] = 1;
+                }
+            });
+            
+            // 转换为图表数据格式
+            const labels = Object.keys(majorCount);
+            const data = Object.values(majorCount);
+            
+            const ctx = document.getElementById('major-distribution-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (window.majorDistributionChart) {
+                window.majorDistributionChart.destroy();
+            }
+            
+            // 创建新图表
+            window.majorDistributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(139, 92, 246, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(236, 72, 153, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                maxWidth: 150,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 更新测评列表
+        function updateAssessmentsList() {
+            const assessmentsList = document.getElementById('assessments-list');
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            
+            // 清空列表
+            assessmentsList.innerHTML = '';
+            
+            // 如果没有测评记录，显示空状态
+            if (assessments.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="6" class="py-8 text-center text-neutral">
+                        <i class="fa fa-folder-open-o text-3xl mb-2"></i>
+                        <p>暂无测评记录</p>
+                    </td>
+                `;
+                assessmentsList.appendChild(emptyRow);
+                return;
+            }
+            
+            // 按日期倒序排序
+            const sortedAssessments = [...assessments].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // 添加测评记录
+            sortedAssessments.forEach(assessment => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors';
+                
+                // 格式化时间
+                const formattedTime = formatTime(assessment.time);
+                
+                // 获取评分等级
+                const scoreClass = getScoreClass(assessment.scores.totalScore);
+                
+                tr.innerHTML = `
+                    <td class="py-3 px-4">${assessment.userInfo.name}</td>
+                    <td class="py-3 px-4">${assessment.userInfo.major}</td>
+                    <td class="py-3 px-4">${assessment.userInfo.class}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs ${scoreClass}">
+                            ${assessment.scores.totalScore}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div>${assessment.date}</div>
+                        <div class="text-xs text-neutral">用时: ${formattedTime}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                            <div class="flex space-x-2">
+                                <button class="view-simple-report-btn px-3 py-1 border border-green-500 text-green-500 rounded-lg text-xs hover:bg-green-50 transition-all" data-id="${assessment.id}">
+                                    查看简易报告
+                                </button>
+                                <button class="view-details-btn px-3 py-1 border border-primary text-primary rounded-lg text-xs hover:bg-primary/5 transition-all" data-id="${assessment.id}">
+                                    查看详情
+                                </button>
+                                <button class="delete-assessment-btn px-3 py-1 border border-red-500 text-red-500 rounded-lg text-xs hover:bg-red-50 transition-all" data-id="${assessment.id}">
+                                    删除
+                                </button>
+                            </div>
+                        </td>
+                `;
+                
+                assessmentsList.appendChild(tr);
+            });
+            
+            // 绑定查看详情按钮事件
+            document.querySelectorAll('.view-details-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const assessmentId = btn.getAttribute('data-id');
+                    showDetailedReport(assessmentId);
+                });
+            });
+            
+            // 绑定查看简易报告按钮事件
+            document.querySelectorAll('.view-simple-report-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const assessmentId = btn.getAttribute('data-id');
+                    showSimpleReport(assessmentId);
+                });
+            });
+            
+            // 绑定删除按钮事件
+            document.querySelectorAll('.delete-assessment-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const assessmentId = btn.getAttribute('data-id');
+                    
+                    // 确认删除
+                    if (confirm('确定要删除这条测评记录吗？此操作不可恢复。')) {
+                        // 获取所有测评记录
+                        let assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+                        
+                        // 过滤掉要删除的记录
+                        assessments = assessments.filter(assessment => assessment.id !== assessmentId);
+                        
+                        // 保存更新后的记录
+                        localStorage.setItem('careerAssessments', JSON.stringify(assessments));
+                        
+                        // 重新加载测评列表
+                        updateAssessmentsList();
+                        
+                        // 更新统计信息
+                        updateAdminStats();
+                        updateAdminDimensionsChart();
+                        updateAdminScoresDistributionChart();
+                        updateMajorDistributionChart();
+                    }
+                });
+            });
+        }
+        
+        // 获取评分等级对应的样式类
+        function getScoreClass(score) {
+            if (score >= 90) {
+                return 'bg-green-100 text-green-800';
+            } else if (score >= 80) {
+                return 'bg-blue-100 text-blue-800';
+            } else if (score >= 70) {
+                return 'bg-yellow-100 text-yellow-800';
+            } else {
+                return 'bg-red-100 text-red-800';
+            }
+        }
+        
+        // 生成深度个性化分析
+        function generatePersonalizedAnalysis(assessment) {
+            const { scores, answers } = assessment;
+            const { dimensionScores, totalScore } = scores;
+            
+            // 找出优势和劣势维度
+            const strengths = dimensionScores.filter(d => d.score >= 80).sort((a, b) => b.score - a.score).slice(0, 3);
+            const weaknesses = dimensionScores.filter(d => d.score < 70).sort((a, b) => a.score - b.score).slice(0, 3);
+            
+            // 生成分析文本
+            let analysis = '';
+            
+            // 总体评价
+            if (totalScore >= 90) {
+                analysis += `总体来看，${assessment.userInfo.name}同学展现出了优秀的职业素养和能力水平。在各项维度上的表现都非常出色，显示出了很强的职场竞争力。`;
+            } else if (totalScore >= 80) {
+                analysis += `总体来看，${assessment.userInfo.name}同学展现出了良好的职业素养和能力水平。在多个关键维度上表现优秀，具备较强的职场适应能力。`;
+            } else if (totalScore >= 70) {
+                analysis += `总体来看，${assessment.userInfo.name}同学的职业素养和能力水平处于中等水平。在某些维度上表现不错，但在其他维度上还有提升空间。`;
+            } else {
+                analysis += `总体来看，${assessment.userInfo.name}同学的职业素养和能力水平需要进一步提升。通过有针对性的训练和学习，可以显著提高职场竞争力。`;
+            }
+            
+            // 优势分析
+            if (strengths.length > 0) {
+                analysis += `\n\n**核心优势**：`;
+                strengths.forEach((strength, index) => {
+                    const dimensionAnalysis = getDimensionSuggestions(strength.name, strength.score).analysis;
+                    analysis += `\n${index + 1}. ${strength.name}（${strength.score}分）：${dimensionAnalysis}`;
+                });
+            }
+            
+            // 待提升点
+            if (weaknesses.length > 0) {
+                analysis += `\n\n**待提升点**：`;
+                weaknesses.forEach((weakness, index) => {
+                    const dimensionAnalysis = getDimensionSuggestions(weakness.name, weakness.score).analysis;
+                    analysis += `\n${index + 1}. ${weakness.name}（${weakness.score}分）：${dimensionAnalysis}`;
+                });
+            }
+            
+            // 职业发展建议
+            analysis += `\n\n**职业发展建议**：`;
+            const highScoreDimensions = dimensionScores.filter(d => d.score >= 85);
+            const lowScoreDimensions = dimensionScores.filter(d => d.score < 75);
+            
+            if (highScoreDimensions.length > 0) {
+                analysis += `\n- 充分发挥你的优势：在${highScoreDimensions.map(d => d.name).join('、')}等方面的出色表现将是你职业发展的核心竞争力。`;
+            }
+            
+            if (lowScoreDimensions.length > 0) {
+                analysis += `\n- 有针对性地提升：建议重点关注${lowScoreDimensions.map(d => d.name).join('、')}等方面的提升，这将显著提高你的综合能力。`;
+            }
+            
+            // 根据专业提供建议
+            analysis += `\n- 结合专业特点：作为${assessment.userInfo.major}专业的学生，建议你在日常学习和实践中注重将专业知识与职场能力相结合，形成独特的竞争优势。`;
+            
+            analysis += `\n- 持续学习和实践：职场能力的提升需要持续的学习和实践。建议你制定有针对性的学习计划，并积极参与相关实践活动，不断提升自己。`;
+            
+            return analysis;
+        }
+        
+        // 显示完整答题记录
+        function showCompleteAnswers(assessment) {
+            const answersContainer = document.getElementById('complete-answers-container');
+            if (!answersContainer) return;
+            
+            // 清空容器
+            answersContainer.innerHTML = '';
+            
+            // 获取问题和用户答案
+            const { answers, optionMaps } = assessment;
+            
+            if (!answers || answers.length === 0) {
+                answersContainer.innerHTML = '<p class="text-neutral text-center py-4">暂无答题记录</p>';
+                return;
+            }
+            
+            // 创建答题记录表格
+            const table = document.createElement('table');
+            table.className = 'min-w-full bg-white border';
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr class="bg-light">
+                    <th class="py-2 px-4 border text-left text-xs font-medium text-neutral uppercase tracking-wider">题号</th>
+                    <th class="py-2 px-4 border text-left text-xs font-medium text-neutral uppercase tracking-wider">问题</th>
+                    <th class="py-2 px-4 border text-left text-xs font-medium text-neutral uppercase tracking-wider">维度</th>
+                    <th class="py-2 px-4 border text-left text-xs font-medium text-neutral uppercase tracking-wider">选择答案</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+            
+            // 创建表格主体
+            const tbody = document.createElement('tbody');
+            
+            questions.forEach((question, index) => {
+                if (answers[index] !== undefined) {
+                    const tr = document.createElement('tr');
+                    tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    
+                    // 获取用户选择的原始选项索引
+                    const selectedOriginalIndex = answers[index];
+                    
+                    // 获取用户选择的选项文本
+                    let selectedOptionText = '';
+                    if (selectedOriginalIndex !== undefined && selectedOriginalIndex < question.options.length) {
+                        selectedOptionText = question.options[selectedOriginalIndex];
+                    }
+                    
+                    // 获取问题维度对应的中文名称
+                    const dimensionName = getDimensionName(question.dimension);
+                    
+                    tr.innerHTML = `
+                        <td class="py-2 px-4 border text-sm">${index + 1}</td>
+                        <td class="py-2 px-4 border text-sm">${question.text}</td>
+                        <td class="py-2 px-4 border text-sm">${dimensionName}</td>
+                        <td class="py-2 px-4 border text-sm">${selectedOptionText}</td>
+                    `;
+                    
+                    tbody.appendChild(tr);
+                }
+            });
+            
+            table.appendChild(tbody);
+            answersContainer.appendChild(table);
+        }
+        
+        // 获取维度的中文名称
+        function getDimensionName(dimensionKey) {
+            const dimensions = [
+                { name: '沟通表达', dimension: 'communication' },
+                { name: '团队协作', dimension: 'teamwork' },
+                { name: '问题解决', dimension: 'problem-solving' },
+                { name: '学习能力', dimension: 'learning-ability' },
+                { name: '压力管理', dimension: 'stress-management' },
+                { name: '时间管理', dimension: 'time-management' },
+                { name: '责任心', dimension: 'responsibility' },
+                { name: '适应能力', dimension: 'adaptability' },
+                { name: '职业成熟度', dimension: 'career-maturity' }
+            ];
+            
+            const dimension = dimensions.find(d => d.dimension === dimensionKey);
+            return dimension ? dimension.name : dimensionKey;
+        }
+        
+        // 显示详细报告
+        function showDetailedReport(assessmentId) {
+            // 存储当前查看的测评ID
+            currentViewingAssessmentId = assessmentId;
+            
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            const assessment = assessments.find(a => a.id === assessmentId);
+            
+            if (assessment) {
+                // 更新报告信息
+                document.getElementById('report-name').textContent = assessment.userInfo.name;
+                document.getElementById('report-info').textContent = `${assessment.userInfo.major} | ${assessment.userInfo.class} | ${assessment.userInfo.education}`;
+                document.getElementById('report-date').textContent = assessment.date;
+                
+                // 更新总分
+                document.getElementById('detail-total-score').textContent = assessment.scores.totalScore;
+                document.getElementById('total-score-bar').style.width = assessment.scores.totalScore + '%';
+                
+                // 更新各个维度的详细信息
+                updateDimensionDetails(assessment.scores.dimensionScores);
+                
+                // 生成并显示深度个性化分析
+                const personalizedAnalysis = generatePersonalizedAnalysis(assessment);
+                const analysisContainer = document.getElementById('personalized-analysis-content');
+                if (analysisContainer) {
+                    // 将Markdown格式转换为HTML
+                    const htmlContent = personalizedAnalysis
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n- /g, '<ul><li>')
+                        .replace(/\n\d+\. /g, '</li></ul><ol><li>')
+                        .replace(/\n/g, '</li><li>')
+                        .replace(/<\/li><\/ul><ol><li>/g, '</li></ul><ol><li>')
+                        .replace(/<\/li><li>/g, '</li><li>')
+                        .replace(/<ul><li>$/, '')
+                        .replace(/<\/li>$/, '</li>')
+                        .replace(/^<li>/, '')
+                        .replace(/<\/ol><\/li>/g, '</li></ol>');
+                    
+                    analysisContainer.innerHTML = htmlContent;
+                }
+                
+                // 显示完整答题记录
+                showCompleteAnswers(assessment);
+                
+                // 显示详细报告
+                showSection(sections.detailedReport);
+            }
+        }
+        
+        // 更新维度详情
+        function updateDimensionDetails(dimensionScores) {
+            dimensionScores.forEach((dimension, index) => {
+                const dimensionIndex = index + 1;
+                
+                // 更新得分
+                document.getElementById(`dimension${dimensionIndex}-score`).textContent = dimension.score;
+                
+                // 更新进度条
+                document.getElementById(`dimension${dimensionIndex}-bar`).style.width = dimension.score + '%';
+                
+                // 设置进度条颜色
+                const bar = document.getElementById(`dimension${dimensionIndex}-bar`);
+                const scoreContainer = document.getElementById(`dimension${dimensionIndex}-score-container`);
+                
+                if (dimension.score >= 90) {
+                    bar.classList.add('bg-green-500');
+                    scoreContainer.classList.add('bg-green-100', 'text-green-800');
+                } else if (dimension.score >= 80) {
+                    bar.classList.add('bg-blue-500');
+                    scoreContainer.classList.add('bg-blue-100', 'text-blue-800');
+                } else if (dimension.score >= 70) {
+                    bar.classList.add('bg-yellow-500');
+                    scoreContainer.classList.add('bg-yellow-100', 'text-yellow-800');
+                } else {
+                    bar.classList.add('bg-red-500');
+                    scoreContainer.classList.add('bg-red-100', 'text-red-800');
+                }
+                
+                // 设置分析和建议
+                const analysis = document.getElementById(`dimension${dimensionIndex}-analysis`);
+                const suggestions = document.getElementById(`dimension${dimensionIndex}-suggestions`);
+                
+                const dimensionSuggestions = getDimensionSuggestions(dimension.name, dimension.score);
+                
+                analysis.textContent = dimensionSuggestions.analysis;
+                
+                // 清空并添加建议
+                suggestions.innerHTML = '';
+                dimensionSuggestions.suggestions.forEach(suggestion => {
+                    const li = document.createElement('li');
+                    li.textContent = suggestion;
+                    suggestions.appendChild(li);
+                });
+            });
+        }
+        
+        // 获取维度建议
+        function getDimensionSuggestions(dimensionName, score) {
+            let analysis = '';
+            let suggestions = [];
+            
+            if (dimensionName === '沟通表达') {
+                if (score >= 90) {
+                    analysis = '该生在沟通表达方面表现优秀，能够清晰、准确地表达自己的想法和观点，善于倾听他人意见，并能够根据不同的沟通对象和场景调整沟通方式。';
+                    suggestions = [
+                        '继续保持良好的沟通习惯，注意在不同场合下的沟通技巧和策略',
+                        '可以考虑分享自己的沟通经验和技巧，帮助他人提高沟通能力',
+                        '尝试学习更专业的沟通技巧，如演讲、谈判等高级技能'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在沟通表达方面表现良好，能够清晰地表达自己的想法，但在复杂情境下的沟通策略和技巧还可以进一步提升。';
+                    suggestions = [
+                        '练习结构化表达，如使用STAR法则（情境、任务、行动、结果）',
+                        '学习积极倾听技巧，提高对他人观点的理解能力',
+                        '参与小组讨论和演讲活动，积累沟通经验'
+                    ];
+                } else {
+                    analysis = '该生在沟通表达方面还有提升空间，可能在表达清晰度、条理性或倾听他人意见方面需要加强。';
+                    suggestions = [
+                        '练习清晰、简洁地表达自己的想法',
+                        '学习倾听技巧，尝试理解他人的观点和立场',
+                        '参与更多的社交和团队活动，积累沟通经验'
+                    ];
+                }
+            } else if (dimensionName === '团队协作') {
+                if (score >= 90) {
+                    analysis = '该生在团队协作方面表现优秀，能够积极参与团队活动，主动承担责任，与团队成员建立良好的合作关系，共同完成团队目标。';
+                    suggestions = [
+                        '继续保持积极的团队合作态度，发挥团队核心成员的作用',
+                        '学习团队管理和领导技巧，培养团队协作精神',
+                        '分享自己的团队合作经验，帮助团队提高整体协作水平'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在团队协作方面表现良好，能够与团队成员和谐相处，完成分配的任务，但在主动承担责任和协调团队资源方面还有提升空间。';
+                    suggestions = [
+                        '在团队项目中主动承担更多责任，尤其是在遇到困难时',
+                        '学习团队管理和协调技巧，提高团队效率',
+                        '培养同理心，更好地理解团队成员的需求和动机'
+                    ];
+                } else {
+                    analysis = '该生在团队协作方面还有提升空间，可能在团队沟通、责任承担或冲突处理方面需要加强。';
+                    suggestions = [
+                        '主动参与团队活动，积极与团队成员沟通交流',
+                        '学习团队协作技巧，如冲突管理、角色定位等',
+                        '尝试在小组项目中担任不同角色，积累团队协作经验'
+                    ];
+                }
+            } else if (dimensionName === '问题解决') {
+                if (score >= 90) {
+                    analysis = '该生在问题解决方面表现优秀，能够快速识别问题，分析问题根源，制定有效的解决方案，并能够在面对复杂问题时保持冷静和理性。';
+                    suggestions = [
+                        '继续保持良好的问题解决能力，关注问题背后的根本原因',
+                        '学习更高级的问题分析和解决工具，如SWOT分析、PDCA循环等',
+                        '分享自己的问题解决经验，帮助他人提高解决问题的能力'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在问题解决方面表现良好，能够分析问题并找到基本解决方案，但在面对复杂问题时的系统性和创新性还有提升空间。';
+                    suggestions = [
+                        '学习更多的问题分析框架和工具，提高分析效率',
+                        '培养创造性思维，探索更多创新的解决方案',
+                        '练习在压力下做出决策的能力，提高应变能力'
+                    ];
+                } else {
+                    analysis = '该生在问题解决方面还有提升空间，可能在问题识别、分析或解决方案制定方面需要加强。';
+                    suggestions = [
+                        '学习基本的问题分析和解决方法，如5W1H分析法',
+                        '尝试将复杂问题分解为简单问题，逐一解决',
+                        '寻求他人的建议和帮助，拓宽解决问题的思路'
+                    ];
+                }
+            } else if (dimensionName === '学习能力') {
+                if (score >= 90) {
+                    analysis = '该生在学习能力方面表现优秀，具备快速学习新知识和技能的能力，能够灵活应用所学知识解决实际问题，适应不断变化的环境和需求。';
+                    suggestions = [
+                        '继续保持良好的学习习惯和态度，探索更高效的学习方法',
+                        '关注行业发展趋势和最新技术，保持学习的前瞻性',
+                        '分享自己的学习经验和方法，帮助他人提高学习效率'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生展现出较强的学习能力，能够快速掌握新知识和技能，但在知识体系化和应用创新方面还有提升空间。';
+                    suggestions = [
+                        '建立个人知识管理系统，将零散知识系统化',
+                        '针对重要领域进行深度学习，形成专业优势',
+                        '培养跨界学习能力，拓宽知识视野'
+                    ];
+                } else {
+                    analysis = '该生在学习能力方面还有提升空间，可能在学习方法、知识应用或适应变化方面需要加强。';
+                    suggestions = [
+                        '尝试不同的学习方法，找到适合自己的学习方式',
+                        '将学习与实践相结合，提高知识应用能力',
+                        '培养持续学习的习惯，适应不断变化的环境'
+                    ];
+                }
+            } else if (dimensionName === '压力管理') {
+                if (score >= 90) {
+                    analysis = '该生在压力管理方面表现优秀，能够有效地识别和应对压力，在高压力环境下保持冷静和高效，维持良好的心理状态。';
+                    suggestions = [
+                        '继续保持良好的压力管理习惯和心态',
+                        '学习更高级的压力调节技巧和方法',
+                        '分享自己的压力管理经验，帮助他人应对压力挑战'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在压力管理方面表现良好，能够基本应对日常压力，但在面对重大压力或持续压力时的调节能力还有提升空间。';
+                    suggestions = [
+                        '学习识别压力信号，及时采取应对措施',
+                        '培养健康的生活方式和放松技巧，如运动、冥想等',
+                        '建立支持系统，在需要时寻求帮助和支持'
+                    ];
+                } else {
+                    analysis = '该生在压力管理方面还有提升空间，可能在压力识别、情绪调节或应对策略方面需要加强。';
+                    suggestions = [
+                        '学习基本的压力识别和管理方法',
+                        '培养健康的生活习惯，如规律作息、适量运动等',
+                        '寻求支持和帮助，如与朋友交流或咨询专业人士'
+                    ];
+                }
+            } else if (dimensionName === '时间管理') {
+                if (score >= 90) {
+                    analysis = '该生在时间管理方面表现优秀，能够合理规划和安排时间，高效完成任务，保持工作和学习的平衡。';
+                    suggestions = [
+                        '继续保持良好的时间管理习惯',
+                        '学习更高级的时间管理技巧，如四象限法则、番茄工作法等',
+                        '分享自己的时间管理经验，帮助他人提高效率'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在时间管理方面表现良好，能够完成大部分任务，但在优先级设置、避免拖延或应对突发情况方面还有提升空间。';
+                    suggestions = [
+                        '学习优先级管理技巧，如四象限法则',
+                        '设定明确的目标和截止日期，避免拖延',
+                        '预留弹性时间，应对突发情况'
+                    ];
+                } else {
+                    analysis = '该生在时间管理方面还有提升空间，可能在任务规划、时间分配或避免拖延方面需要加强。';
+                    suggestions = [
+                        '尝试使用时间管理工具，如日程表、待办事项清单等',
+                        '学习任务分解和优先级排序的方法',
+                        '设定合理的目标和截止日期'
+                    ];
+                }
+            } else if (dimensionName === '责任心') {
+                if (score >= 90) {
+                    analysis = '该生在责任心方面表现优秀，能够主动承担责任，认真完成自己的任务和承诺，对工作和学习有高度的责任感和使命感。';
+                    suggestions = [
+                        '继续保持高度的责任心和敬业精神',
+                        '在团队中发挥榜样作用，带动他人提高责任意识',
+                        '学习责任管理技巧，平衡不同责任之间的关系'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在责任心方面表现良好，能够完成自己的基本任务和职责，但在主动承担额外责任或面对困难时的坚持性还有提升空间。';
+                    suggestions = [
+                        '在确保完成基本职责的基础上，尝试承担更多责任',
+                        '培养面对困难和挑战的勇气和坚持性',
+                        '学习责任分配和沟通技巧，更好地履行职责'
+                    ];
+                } else {
+                    analysis = '该生在责任心方面还有提升空间，可能在任务完成质量、承诺履行或主动承担责任方面需要加强。';
+                    suggestions = [
+                        '从小事做起，培养认真负责的习惯',
+                        '设定明确的责任目标，逐步提高责任意识',
+                        '学习时间管理和任务规划技巧，确保任务按时高质量完成'
+                    ];
+                }
+            } else if (dimensionName === '适应能力') {
+                if (score >= 90) {
+                    analysis = '该生在适应能力方面表现优秀，能够快速适应新环境、新任务和新变化，具备很强的灵活性和应变能力，能够在变化中保持高效和稳定。';
+                    suggestions = [
+                        '继续保持良好的适应能力和开放心态',
+                        '学习更高级的适应策略和技巧，应对更复杂的变化',
+                        '分享自己的适应经验，帮助他人适应新环境和变化'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在适应能力方面表现良好，能够基本适应新环境和变化，但在适应速度、深度或面对重大变化时的应对能力还有提升空间。';
+                    suggestions = [
+                        '培养开放和学习的心态，积极面对变化',
+                        '学习快速适应新环境的技巧，如观察、倾听和学习',
+                        '主动寻求支持和帮助，加速适应过程'
+                    ];
+                } else {
+                    analysis = '该生在适应能力方面还有提升空间，可能在面对新环境、新任务或变化时感到不适或难以调整。';
+                    suggestions = [
+                        '尝试从小的变化开始，逐步提高适应能力',
+                        '学习基本的适应技巧，如积极思考、寻求支持等',
+                        '保持开放和学习的心态，主动面对和拥抱变化'
+                    ];
+                }
+            } else if (dimensionName === '职业成熟度') {
+                if (score >= 90) {
+                    analysis = '该生在职业成熟度方面表现优秀，对职场规则和要求有清晰的认识，具备良好的职业素养和职业规划意识，能够做出符合自身职业发展的决策。';
+                    suggestions = [
+                        '继续完善自己的职业规划，设定更具体、可衡量的目标',
+                        '关注行业发展动态，及时调整职业发展方向和计划',
+                        '寻求职业导师的指导，获取更多的职业发展建议'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在职业成熟度方面表现良好，对职场有一定的认识，但在职业规划清晰度、职业素养或决策能力方面还有提升空间。';
+                    suggestions = [
+                        '进一步明确自己的职业目标和发展路径',
+                        '加强职业素养的培养，如专业技能、沟通能力等',
+                        '学习职业决策的方法和技巧，做出更明智的选择'
+                    ];
+                } else {
+                    analysis = '该生在职业成熟度方面还有提升空间，可能对职场规则、职业规划或自身职业定位的认识不够清晰。';
+                    suggestions = [
+                        '了解职场基本规则和要求，提高职业认知',
+                        '进行自我评估，明确自己的职业兴趣和优势',
+                        '制定短期职业目标，并逐步完善长期职业规划'
+                    ];
+                }
+            } else if (dimensionName === '创新思维') {
+                if (score >= 90) {
+                    analysis = '该生在创新思维方面表现优秀，能够提出独特的见解和想法，善于打破常规思维模式，寻找创新的解决方案。';
+                    suggestions = [
+                        '继续培养创新思维，尝试从不同角度思考问题',
+                        '学习创新工具和方法，如设计思维、头脑风暴等',
+                        '将创新思维应用到实际问题解决中，创造更多价值'
+                    ];
+                } else if (score >= 80) {
+                    analysis = '该生在创新思维方面表现良好，能够接受新观点和新方法，但在主动创新和创造性解决问题方面还有提升空间。';
+                    suggestions = [
+                        '培养好奇心，关注新事物和新趋势',
+                        '尝试跨领域学习，拓宽思维视野',
+                        '参与创新项目，积累创新经验'
+                    ];
+                } else {
+                    analysis = '该生在创新思维方面还有提升空间，可能在接受新观点、突破常规思维或创造性解决问题方面需要加强。';
+                    suggestions = [
+                        '尝试改变思维模式，从不同角度思考问题',
+                        '学习基本的创新方法和工具',
+                        '参与创意活动，培养创新意识'
+                    ];
+                }
+            }
+            
+            return {
+                analysis,
+                suggestions
+            };
+        }
+        
+        // 下载报告
+        function downloadReport() {
+            try {
+                // 优先使用当前查看的测评ID，如果不存在再尝试从URL获取
+                let currentReportId = currentViewingAssessmentId;
+                
+                // 如果currentViewingAssessmentId不存在，再尝试从URL参数获取
+                if (!currentReportId) {
+                    currentReportId = new URLSearchParams(window.location.search).get('assessmentId');
+                }
+                
+                const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+                const assessment = assessments.find(a => a.id === currentReportId);
+                
+                if (!assessment) {
+                    alert('无法获取测评数据');
+                    return;
+                }
+                
+                // 定义PDF页面设置
+                const pageWidth = 210; // A4宽度（mm）
+                const pageHeight = 297; // A4高度（mm）
+                const marginLeft = 20; // 左边距（mm）
+                const marginTop = 15; // 上边距（mm）- 减小上边距
+                const marginRight = 20; // 右边距（mm）
+                const marginBottom = 20; // 下边距（mm）
+                const contentWidth = 170; // 内容区域宽度（mm）- 增加内容区域宽度
+                
+                // 创建临时HTML元素的通用函数
+                function createPageContainer() {
+                    const container = document.createElement('div');
+                    container.style.position = 'absolute';
+                    container.style.top = '-9999px';
+                    container.style.left = '-9999px';
+                    container.style.width = contentWidth + 'mm';
+                    container.style.minHeight = (pageHeight - marginTop - marginBottom) + 'mm';
+                    container.style.padding = '10mm'; // 额外的内部填充
+                    container.style.boxSizing = 'border-box';
+                    container.style.fontFamily = 'Arial, sans-serif';
+                    container.style.backgroundColor = 'white';
+                    container.style.color = '#333';
+                    document.body.appendChild(container);
+                    return container;
+                }
+                
+                // 创建PDF文档
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // 第一页：标题和基本信息
+                const titlePageContainer = createPageContainer();
+                titlePageContainer.innerHTML = `
+                    <h1 style="text-align: center; font-size: 24px; margin-bottom: 50px; margin-top: 40px; color: #1e293b;">学生职场潜能测评报告</h1>
+                    
+                    <!-- 学生基本信息 -->
+                    <div style="margin-bottom: 40px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
+                        <h2 style="font-size: 18px; margin-bottom: 25px; color: #3498db;">基本信息</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <p style="font-size: 16px;"><strong>姓名:</strong> ${assessment.userInfo.name}</p>
+                            <p style="font-size: 16px;"><strong>专业:</strong> ${assessment.userInfo.major}</p>
+                            <p style="font-size: 16px;"><strong>班级:</strong> ${assessment.userInfo.class}</p>
+                            <p style="font-size: 16px;"><strong>学历:</strong> ${assessment.userInfo.education}</p>
+                            <p style="font-size: 16px; grid-column: span 2;"><strong>测评日期:</strong> ${assessment.date}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 总体得分 -->
+                    <div style="margin-bottom: 40px;">
+                        <h2 style="font-size: 18px; margin-bottom: 25px; color: #3498db;">总体得分</h2>
+                        <div style="margin-bottom: 15px;">
+                            <span style="font-size: 32px; font-weight: bold; color: #3498db;">${assessment.scores.totalScore}</span>
+                            <span style="font-size: 20px;">/100</span>
+                        </div>
+                        <div style="width: 100%; height: 24px; background-color: #e2e8f0; border-radius: 12px; overflow: hidden;">
+                            <div style="width: ${assessment.scores.totalScore}%; height: 100%; background-color: #3498db;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // 第二页：各维度得分详情
+                const dimensionsPageContainer = createPageContainer();
+                let dimensionsHTML = `
+                    <h1 style="text-align: center; font-size: 22px; margin-bottom: 40px; margin-top: 20px; color: #1e293b;">各维度得分详情</h1>
+                `;
+                
+                // 添加每个维度的详细信息，包括得分和进度条
+                assessment.scores.dimensionScores.forEach((dimension, index) => {
+                    const dimensionName = dimension.name || getDimensionName(dimension.dimension);
+                    let barColor = '#ef4444'; // 默认红色
+                    let scoreBgColor = '#fee2e2';
+                    let scoreTextColor = '#991b1b';
+                    
+                    // 根据得分设置颜色
+                    if (dimension.score >= 90) {
+                        barColor = '#22c55e'; // 绿色
+                        scoreBgColor = '#d1fae5';
+                        scoreTextColor = '#065f46';
+                    } else if (dimension.score >= 80) {
+                        barColor = '#3b82f6'; // 蓝色
+                        scoreBgColor = '#dbeafe';
+                        scoreTextColor = '#1e40af';
+                    } else if (dimension.score >= 70) {
+                        barColor = '#eab308'; // 黄色
+                        scoreBgColor = '#fef3c7';
+                        scoreTextColor = '#92400e';
+                    }
+                    
+                    dimensionsHTML += `
+                        <div style="margin-bottom: 25px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="font-size: 17px;">${index + 1}. ${dimensionName}</span>
+                                <span style="font-size: 17px; font-weight: bold; background-color: ${scoreBgColor}; color: ${scoreTextColor}; padding: 4px 12px; border-radius: 6px;">${dimension.score}/100</span>
+                            </div>
+                            <div style="width: 100%; height: 20px; background-color: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                                <div style="width: ${dimension.score}%; height: 100%; background-color: ${barColor};"></div>
+                            </div>
+                        </div>`;
+                });
+                
+                dimensionsPageContainer.innerHTML = dimensionsHTML;
+                
+                // 第三页：深度个性化分析
+                const analysisPageContainer = createPageContainer();
+                const analysisHeader = document.createElement('h1');
+                analysisHeader.style.textAlign = 'center';
+                analysisHeader.style.fontSize = '22px';
+                analysisHeader.style.marginBottom = '40px';
+                analysisHeader.style.marginTop = '20px';
+                analysisHeader.style.color = '#1e293b';
+                analysisHeader.textContent = '深度个性化分析';
+                
+                const analysisContent = document.createElement('div');
+                analysisContent.style.fontSize = '16px';
+                analysisContent.style.lineHeight = '2';
+                analysisContent.style.whiteSpace = 'pre-wrap';
+                analysisContent.style.textAlign = 'justify';
+                
+                // 安全地设置内容，避免模板字符串中的语法问题
+                const personalizedAnalysis = generatePersonalizedAnalysis(assessment);
+                analysisContent.textContent = personalizedAnalysis;
+                
+                analysisPageContainer.appendChild(analysisHeader);
+                analysisPageContainer.appendChild(analysisContent);
+                
+                // 第四页及后续：完整答题记录表格（分2页显示）
+                let answerPages = [];
+                if (assessment.answers && assessment.answers.length > 0) {
+                    // 明确分为2页显示，第一页15题，第二页剩余题目
+                    const pagesConfig = [
+                        { start: 0, end: 15, pageNum: 1 },
+                        { start: 15, end: assessment.answers.length, pageNum: 2 }
+                    ];
+                    
+                    pagesConfig.forEach(config => {
+                        const answerPageContainer = createPageContainer();
+                        let answersHTML = `
+                            <h1 style="text-align: center; font-size: 18px; margin-bottom: 15px; margin-top: 5px; color: #1e293b;">完整答题记录 ${config.pageNum}/2</h1>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                    <thead>
+                                        <tr style="background-color: #f1f5f9;">
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">题号</th>
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">问题</th>
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">维度</th>
+                                            <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">选择答案</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        
+                        // 添加当前页的答题记录行
+                        for (let i = config.start; i < config.end; i++) {
+                            const question = questions[i];
+                            const selectedOriginalIndex = assessment.answers[i];
+                            let selectedOptionText = '';
+                            if (selectedOriginalIndex !== undefined && selectedOriginalIndex < question.options.length) {
+                                selectedOptionText = question.options[selectedOriginalIndex];
+                            }
+                            const dimensionName = getDimensionName(question.dimension);
+                            const rowBgColor = (i - config.start) % 2 === 0 ? '#ffffff' : '#f8fafc';
+                            
+                            answersHTML += `
+                                        <tr style="background-color: ${rowBgColor};">
+                                            <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 12px;">${i + 1}</td>
+                                            <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 12px;">${question.text}</td>
+                                            <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 12px;">${dimensionName}</td>
+                                            <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 12px;">${selectedOptionText}</td>
+                                        </tr>
+                            `;
+                        }
+                        
+                        answersHTML += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        
+                        answerPageContainer.innerHTML = answersHTML;
+                        answerPages.push(answerPageContainer);
+                    });
+                }
+                
+                // 最后一页：免责声明
+                const disclaimerPageContainer = createPageContainer();
+                disclaimerPageContainer.innerHTML = `
+                    <div style="margin-top: 150px; text-align: center;">
+                        <p style="font-size: 14px; color: #64748b; line-height: 1.8;">免责声明：本报告仅根据本次测评的回答内容进行分析，不代表隆链公司对候选人的评价。</p>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 20px;">© ${new Date().getFullYear()} 隆链公司 版权所有</p>
+                    </div>
+                `;
+                
+                // 保存所有页面元素以便后续处理
+                const pageContainers = [
+                    titlePageContainer,
+                    dimensionsPageContainer,
+                    analysisPageContainer,
+                    ...answerPages,
+                    disclaimerPageContainer
+                ];
+                
+                // 渲染所有页面并添加到PDF
+                let currentPageIndex = 0;
+                
+                function renderAndAddPage() {
+                    if (currentPageIndex >= pageContainers.length) {
+                        // 所有页面都已处理完成，保存PDF
+                        pdf.save(`测评报告_${assessment.userInfo.name}_${new Date().toISOString().slice(0, 10)}.pdf`);
+                        
+                        // 清理临时元素
+                        setTimeout(() => {
+                            pageContainers.forEach(container => {
+                                document.body.removeChild(container);
+                            });
+                        }, 100);
+                        return;
+                    }
+                    
+                    const currentContainer = pageContainers[currentPageIndex];
+                    
+                    // 使用html2canvas渲染当前页面
+                    html2canvas(currentContainer, {
+                        scale: 2, // 提高清晰度
+                        useCORS: true,
+                        logging: false,
+                        windowWidth: currentContainer.offsetWidth,
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high'
+                    }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        
+                        // 计算图像在PDF中的尺寸（保持宽高比）
+                        const imgWidth = canvas.width;
+                        const imgHeight = canvas.height;
+                        const imgRatio = imgWidth / imgHeight;
+                        const pdfImgWidth = pageWidth - marginLeft - marginRight;
+                        const pdfImgHeight = pdfImgWidth / imgRatio;
+                        
+                        // 确保第二页及以后添加新页面
+                        if (currentPageIndex > 0) {
+                            pdf.addPage();
+                        }
+                        
+                        // 居中放置图像
+                        const imgX = marginLeft;
+                        const imgY = marginTop;
+                        
+                        // 添加图像到PDF
+                        pdf.addImage(
+                            imgData, 
+                            'PNG', 
+                            imgX, 
+                            imgY, 
+                            pdfImgWidth, 
+                            pdfImgHeight
+                        );
+                        
+                        // 处理下一页
+                        currentPageIndex++;
+                        renderAndAddPage();
+                    });
+                }
+                
+                // 开始处理第一页
+                renderAndAddPage();
+                
+            } catch (error) {
+                console.error('下载报告时出错:', error);
+                // 显示更详细的错误信息，方便调试
+                alert(`下载报告时出错：${error.message}\n请联系系统管理员或稍后再试。`);
+            }
+        }
+        
+        // 启动计时器
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const formattedTime = formatTime(secondsElapsed);
+                timerElements.display.innerHTML = `<i class="fa fa-clock-o mr-1"></i>
+                <span>用时: ${formattedTime}</span>`;
+                timerElements.mobileTimer.innerHTML = `<i class="fa fa-clock-o mr-1"></i>
+                用时: ${formattedTime}`;
+            }, 1000);
+        }
+        
+        // 停止计时器
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 显示简易报告
+        function showSimpleReport(assessmentId) {
+            // 存储当前查看的测评ID
+            currentViewingAssessmentId = assessmentId;
+            
+            const assessments = JSON.parse(localStorage.getItem('careerAssessments')) || [];
+            const assessment = assessments.find(a => a.id === assessmentId);
+            
+            if (assessment) {
+                // 更新报告信息
+                document.getElementById('simple-report-name').textContent = assessment.userInfo.name;
+                document.getElementById('simple-report-info').textContent = `${assessment.userInfo.major} | ${assessment.userInfo.class} | ${assessment.userInfo.education}`;
+                document.getElementById('simple-report-date').textContent = assessment.date;
+                
+                // 更新总分
+                const totalScore = assessment.scores.totalScore;
+                document.getElementById('simple-total-score').textContent = totalScore;
+                document.getElementById('simple-total-score-bar').style.width = totalScore + '%';
+                
+                // 设置评级
+                const ratingElement = document.getElementById('simple-overall-rating');
+                if (totalScore >= 90) {
+                    ratingElement.textContent = '优秀';
+                    ratingElement.className = 'inline-block px-4 py-2 rounded-full bg-green-100 text-green-800 font-medium';
+                } else if (totalScore >= 80) {
+                    ratingElement.textContent = '良好';
+                    ratingElement.className = 'inline-block px-4 py-2 rounded-full bg-blue-100 text-blue-800 font-medium';
+                } else if (totalScore >= 70) {
+                    ratingElement.textContent = '中等';
+                    ratingElement.className = 'inline-block px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 font-medium';
+                } else {
+                    ratingElement.textContent = '待提升';
+                    ratingElement.className = 'inline-block px-4 py-2 rounded-full bg-red-100 text-red-800 font-medium';
+                }
+                
+                // 更新雷达图
+                updateSimpleRadarChart(assessment.scores.dimensionScores);
+                
+                // 分析优势和不足
+                analyzeSimpleStrengthsAndWeaknesses(assessment.scores.dimensionScores);
+                
+                // 显示简易报告
+                showSection(sections.simpleReport);
+            }
+        }
+        
+        // 更新简易报告雷达图
+        function updateSimpleRadarChart(dimensionScores) {
+            const ctx = document.getElementById('simple-radar-chart').getContext('2d');
+            
+            // 销毁之前的图表实例
+            if (window.simpleRadarChart) {
+                window.simpleRadarChart.destroy();
+            }
+            
+            // 准备数据
+            const labels = dimensionScores.map(dimension => dimension.name);
+            const data = dimensionScores.map(dimension => dimension.score);
+            
+            // 创建雷达图
+            window.simpleRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '得分',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 分析简易报告中的优势和不足
+        function analyzeSimpleStrengthsAndWeaknesses(dimensionScores) {
+            // 排序
+            const sortedScores = [...dimensionScores].sort((a, b) => b.score - a.score);
+            
+            // 获取前两名优势
+            const strengths = sortedScores.slice(0, 2);
+            
+            // 获取后两名不足
+            const weaknesses = sortedScores.slice(-2).reverse();
+            
+            // 显示优势
+            const strengthsList = document.getElementById('simple-strengths-list');
+            strengthsList.innerHTML = '';
+            strengths.forEach(strength => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center';
+                li.innerHTML = `
+                    <i class="fa fa-check-circle text-green-500 mr-2"></i>
+                    <span>${strength.name}: <strong>${strength.score}</strong>/100</span>
+                `;
+                strengthsList.appendChild(li);
+            });
+            
+            // 显示不足
+            const weaknessesList = document.getElementById('simple-weaknesses-list');
+            weaknessesList.innerHTML = '';
+            weaknesses.forEach(weakness => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center';
+                li.innerHTML = `
+                    <i class="fa fa-exclamation-circle text-red-500 mr-2"></i>
+                    <span>${weakness.name}: <strong>${weakness.score}</strong>/100</span>
+                `;
+                weaknessesList.appendChild(li);
+            });
+        }
+        
+        // 显示指定的section
+        function showSection(section) {
+            // 隐藏所有section
+            Object.values(sections).forEach(s => {
+                s.classList.add('hidden');
+            });
+            
+            // 显示指定的section
+            section.classList.remove('hidden');
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
